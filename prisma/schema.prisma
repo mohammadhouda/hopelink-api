@@ -1,0 +1,161 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(USER)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  // Profiles
+  userProfile      UserProfile?
+  volunteerProfile VolunteerProfile?
+  charityProfile   Charity?
+
+  projects       Project[]
+  applications   Application[]
+
+  refreshTokens  RefreshToken[]
+}
+
+
+
+model UserProfile {
+  id        Int      @id @default(autoincrement())
+
+  phone     String?
+  avatarUrl String?
+  city      String?
+  country   String?
+  bio       String?
+
+  userId    Int      @unique
+  user      User     @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+model Charity {
+  id          Int      @id @default(autoincrement())
+
+  // Profile
+  name        String
+  description String?
+  logoUrl     String?
+  websiteUrl  String?
+  phone       String?
+  address     String?
+  city        String?
+  category    String?
+
+  // Status & moderation
+  isVerified  Boolean  @default(false)
+
+  // Ownership
+  userId      Int      @unique
+  createdByAdminId Int?
+
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id])
+  projects    Project[]
+}
+
+model VolunteerProfile {
+  id Int @id @default(autoincrement())
+
+  userId Int @unique
+  user   User @relation(fields: [userId], references: [id])
+
+  // Availability
+  isAvailable Boolean @default(true)
+  availabilityNote String?   // "Weekends", "Evenings"
+
+  // Preferences
+  preferredCategories String[]   // ["Education", "Health"]
+  preferredCities     String[]   // ["Beirut", "Tripoli"]
+
+  // Skills & experience
+  skills      String[]           // ["Teaching", "First Aid"]
+  experience  String?            // Free text
+
+  // Verification / trust
+  isVerified  Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+model Project {
+  id          Int           @id @default(autoincrement())
+  title       String
+  description String
+  category    String?
+  status      ProjectStatus @default(ACTIVE)
+  createdAt   DateTime      @default(now())
+
+  charityId   Int
+  userId      Int?
+
+  charity     Charity @relation(fields: [charityId], references: [id])
+  user        User?   @relation(fields: [userId], references: [id])
+  applications Application[]
+
+  @@index([charityId])
+  @@index([userId])
+  @@index([status])
+}
+
+
+model Application {
+  id        Int      @id @default(autoincrement())
+  message   String?
+  createdAt DateTime @default(now())
+
+  userId    Int
+  projectId Int
+
+  user      User    @relation(fields: [userId], references: [id])
+  project   Project @relation(fields: [projectId], references: [id])
+
+  @@unique([userId, projectId])
+  @@index([projectId])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
+}
+
+
+enum Role {
+  USER
+  ADMIN
+  CHARITY
+}
+
+enum ProjectStatus {
+  ACTIVE
+  PAUSED
+  CLOSED
+}
+
