@@ -1,45 +1,36 @@
+// controllers/auth.controller.js
 import {
   registerService,
   loginService,
   refreshTokenService,
   logoutService,
-  logoutAllService
+  logoutAllService,
+  getActiveSessionsService,
+  revokeSessionService
 } from "../services/auth.service.js";
 import { success, failure } from "../utils/response.js";
+import { getClientIp, parseUserAgent } from "../utils/security.js";
 
-// Cookie options
 const COOKIE_OPTIONS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
   sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
 };
 
-export async function registerController(req, res) {
-  try {
-    const { user, accessToken, refreshToken } = await registerService(req.body);
-
-    res.cookie("access_token", accessToken, {
-      ...COOKIE_OPTIONS,
-      maxAge: 20 * 60 * 1000 // 20 minutes
-    });
-
-    res.cookie("refresh_token", refreshToken, {
-      ...COOKIE_OPTIONS,
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      path: "/api/auth" // Only sent to auth routes
-    });
-
-    return success(res, user, "User registered successfully.", 201);
-  } catch (err) {
-    return failure(res, err.message, 400);
-  }
+// Extract client info from request
+function getClientInfo(req) {
+  const userAgent = req.headers["user-agent"] || "";
+  return {
+    ipAddress: getClientIp(req),
+    userAgent: userAgent.substring(0, 500),
+    deviceInfo: parseUserAgent(userAgent)
+  };
 }
 
-export async function loginController(req, res) {
+export async function registerController(req, res) {
   try {
-
-    // Authenticate user and generate tokens
-    const { user, accessToken, refreshToken } = await loginService(req.body);
+    const clientInfo = getClientInfo(req);
+    const { user, accessToken, refreshToken } = await registerService(req.body, clientInfo);
 
     res.cookie("access_token", accessToken, {
       ...COOKIE_OPTIONS,
@@ -52,13 +43,38 @@ export async function loginController(req, res) {
       path: "/api/auth"
     });
 
-    return success(res, user, "User logged in successfully.", 200);
+    return success(res, user, "User registered successfully.", 201);
   } catch (err) {
     return failure(res, err.message, 400);
   }
 }
 
-// Refresh token controller
+export async function loginController(req, res) {
+  try {
+    const clientInfo = getClientInfo(req);
+    const { user, accessToken, refreshToken, warning } = await loginService(req.body, clientInfo);
+
+    res.cookie("access_token", accessToken, {
+      ...COOKIE_OPTIONS,
+      maxAge: 20 * 60 * 1000
+    });
+
+    res.cookie("refresh_token", refreshToken, {
+      ...COOKIE_OPTIONS,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: "/api/auth"
+    });
+
+    const response = { user };
+    if (warning) response.warning = warning;
+
+    return success(res, response, "User logged in successfully.", 200);
+  } catch (err) {
+    const status = err.message.includes("locked") ? 429 : 400;
+    return failure(res, err.message, status);
+  }
+}
+
 export async function refreshController(req, res) {
   try {
     const refreshToken = req.cookies?.refresh_token || req.body.refreshToken;
@@ -67,10 +83,9 @@ export async function refreshController(req, res) {
       throw new Error("Refresh token is required");
     }
 
-    // Generate new tokens
-    const { accessToken, refreshToken: newRefreshToken } = await refreshTokenService(refreshToken);
+    const clientInfo = getClientInfo(req);
+    const { accessToken, refreshToken: newRefreshToken } = await refreshTokenService(refreshToken, clientInfo);
 
-    // Set new tokens in cookies
     res.cookie("access_token", accessToken, {
       ...COOKIE_OPTIONS,
       maxAge: 20 * 60 * 1000
@@ -84,17 +99,17 @@ export async function refreshController(req, res) {
 
     return success(res, null, "Token refreshed successfully.", 200);
   } catch (err) {
-    // Clear cookies on refresh failure
     res.clearCookie("access_token");
     res.clearCookie("refresh_token", { path: "/api/auth" });
-    return failure(res, err.message, 401);
+    
+    const status = err.message.includes("reuse") ? 403 : 401;
+    return failure(res, err.message, status);
   }
 }
 
 export async function logoutController(req, res) {
   try {
     const refreshToken = req.cookies?.refresh_token;
-
     await logoutService(refreshToken);
 
     res.clearCookie("access_token");
@@ -114,6 +129,27 @@ export async function logoutAllController(req, res) {
     res.clearCookie("refresh_token", { path: "/api/auth" });
 
     return success(res, null, "Logged out from all devices.", 200);
+  } catch (err) {
+    return failure(res, err.message, 400);
+  }
+}
+
+// Get user's active sessions
+export async function getSessionsController(req, res) {
+  try {
+    const sessions = await getActiveSessionsService(req.user.id);
+    return success(res, sessions, "Sessions retrieved.", 200);
+  } catch (err) {
+    return failure(res, err.message, 400);
+  }
+}
+
+// Revoke specific session
+export async function revokeSessionController(req, res) {
+  try {
+    const { sessionId } = req.params;
+    await revokeSessionService(req.user.id, sessionId);
+    return success(res, null, "Session revoked.", 200);
   } catch (err) {
     return failure(res, err.message, 400);
   }

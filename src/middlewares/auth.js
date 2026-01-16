@@ -16,11 +16,6 @@ const ERROR_MESSAGES = {
   MALFORMED_TOKEN: "Malformed authentication token",
 };
 
-/**
- * Extracts JWT token from request cookies or Authorization header
- * @param {Object} req - Express request object
- * @returns {string|null} - Extracted token or null
- */
 function extractToken(req) {
   // Check cookies first
   if (req.cookies?.[TOKEN_COOKIE_NAME]) {
@@ -36,13 +31,7 @@ function extractToken(req) {
   return null;
 }
 
-/**
- * Verifies JWT token and validates payload structure
- * @param {string} token - JWT token to verify
- * @returns {Object} - Decoded token payload
- * @throws {Error} - If token is invalid or malformed
- */
-function verifyToken(token) {
+async function verifyToken(token) {
   const jwtSecret = process.env.JWT_SECRET;
 
   if (!jwtSecret) {
@@ -56,18 +45,17 @@ function verifyToken(token) {
     throw new Error("Invalid token payload: missing user id");
   }
 
+    const session = await prisma.userSession.findUnique({
+    where: { id: decoded.sessionId }
+  });
+
+  if (!session || session.isRevoked) {
+    return failure(res, "Session revoked", 401);
+  }
+
   return decoded;
 }
 
-/**
- * Authentication middleware
- * Validates JWT token and attaches user information to request object
- *
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
- * @returns {void}
- */
 async function authMiddleware(req, res, next) {
   try {
     // Extract token from request
@@ -91,6 +79,7 @@ async function authMiddleware(req, res, next) {
       if (error.message.includes("Invalid token payload")) {
         return failure(res, ERROR_MESSAGES.MALFORMED_TOKEN, 401);
       }
+
       // Re-throw unexpected errors
       throw error;
     }

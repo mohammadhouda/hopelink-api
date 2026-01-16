@@ -16,6 +16,11 @@ model User {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
 
+  // Security tracking
+  lastLoginAt       DateTime?
+  lastLoginIp       String?
+  passwordChangedAt DateTime?
+
   // Profiles
   userProfile      UserProfile?
   volunteerProfile VolunteerProfile?
@@ -23,15 +28,13 @@ model User {
 
   projects       Project[]
   applications   Application[]
-
   refreshTokens  RefreshToken[]
+  sessions       UserSession[]
+  lockout        AccountLockout?
 }
-
-
 
 model UserProfile {
   id        Int      @id @default(autoincrement())
-
   phone     String?
   avatarUrl String?
   city      String?
@@ -45,11 +48,8 @@ model UserProfile {
   updatedAt DateTime @updatedAt
 }
 
-
 model Charity {
   id          Int      @id @default(autoincrement())
-
-  // Profile
   name        String
   description String?
   logoUrl     String?
@@ -59,11 +59,9 @@ model Charity {
   city        String?
   category    String?
 
-  // Status & moderation
   isVerified  Boolean  @default(false)
 
-  // Ownership
-  userId      Int      @unique
+  userId           Int      @unique
   createdByAdminId Int?
 
   createdAt   DateTime @default(now())
@@ -78,25 +76,20 @@ model VolunteerProfile {
   userId Int @unique
   user   User @relation(fields: [userId], references: [id])
 
-  // Availability
-  isAvailable Boolean @default(true)
-  availabilityNote String?   // "Weekends", "Evenings"
+  isAvailable      Boolean  @default(true)
+  availabilityNote String?
 
-  // Preferences
-  preferredCategories String[]   // ["Education", "Health"]
-  preferredCities     String[]   // ["Beirut", "Tripoli"]
+  preferredCategories String[]
+  preferredCities     String[]
 
-  // Skills & experience
-  skills      String[]           // ["Teaching", "First Aid"]
-  experience  String?            // Free text
+  skills     String[]
+  experience String?
 
-  // Verification / trust
-  isVerified  Boolean @default(false)
+  isVerified Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
-
 
 model Project {
   id          Int           @id @default(autoincrement())
@@ -106,18 +99,17 @@ model Project {
   status      ProjectStatus @default(ACTIVE)
   createdAt   DateTime      @default(now())
 
-  charityId   Int
-  userId      Int?
+  charityId Int
+  userId    Int?
 
-  charity     Charity @relation(fields: [charityId], references: [id])
-  user        User?   @relation(fields: [userId], references: [id])
+  charity      Charity       @relation(fields: [charityId], references: [id])
+  user         User?         @relation(fields: [userId], references: [id])
   applications Application[]
 
   @@index([charityId])
   @@index([userId])
   @@index([status])
 }
-
 
 model Application {
   id        Int      @id @default(autoincrement())
@@ -127,8 +119,8 @@ model Application {
   userId    Int
   projectId Int
 
-  user      User    @relation(fields: [userId], references: [id])
-  project   Project @relation(fields: [projectId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+  project Project @relation(fields: [projectId], references: [id])
 
   @@unique([userId, projectId])
   @@index([projectId])
@@ -142,10 +134,58 @@ model RefreshToken {
   expiresAt DateTime
   createdAt DateTime @default(now())
 
+  // Security fields
+  ipAddress  String?
+  userAgent  String?
+  deviceInfo String?
+  family     String?
+  isRevoked  Boolean @default(false)
+
   @@index([userId])
   @@index([token])
+  @@index([family])
 }
 
+// Track failed login attempts
+model LoginAttempt {
+  id        Int      @id @default(autoincrement())
+  email     String
+  ipAddress String
+  userAgent String?
+  success   Boolean
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([ipAddress])
+  @@index([createdAt])
+}
+
+// Track active sessions
+model UserSession {
+  id         String   @id @default(uuid())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ipAddress  String
+  userAgent  String?
+  deviceInfo String?
+  location   String?
+  lastActive DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+}
+
+// Account lockout tracking
+model AccountLockout {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lockoutUntil DateTime
+  attempts     Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
 
 enum Role {
   USER
@@ -158,4 +198,3 @@ enum ProjectStatus {
   PAUSED
   CLOSED
 }
-

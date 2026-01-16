@@ -2,13 +2,14 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 
 // Generate JWT access token
-export function generateToken(user_id, role="USER") {
+export function generateToken(userId, role, sessionId) {
   return jwt.sign(
-    { id: user_id, role: role },
+    { id: userId, role, sessionId },
     process.env.JWT_SECRET,
     { expiresIn: "20m" }
   );
 }
+
 
 // Generate a secure random refresh token
 export function generateRefreshToken() {
