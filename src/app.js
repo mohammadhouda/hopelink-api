@@ -7,6 +7,7 @@ import userRoutes from "./routes/user.route.js";
 import authMiddleware from "./middlewares/auth.js";
 import restrictTo from "./middlewares/restrictTo.js";
 import cookieParser from "cookie-parser";
+import helmet from "helmet";
 
 const app = express();
 
@@ -16,11 +17,12 @@ app.use(cors({
   origin: "http://localhost:3000",
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  allowedHeaders: ["Content-Type", "Authorization", "CSRF-Token"]
 }));
 
 app.use(cookieParser());
 app.use(express.json());
+app.use(helmet());
 
 
 // Routes

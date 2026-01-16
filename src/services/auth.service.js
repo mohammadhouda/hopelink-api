@@ -1,8 +1,13 @@
 import prisma from "../config/prisma.js";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import {generateToken, generateRefreshToken} from "../utils/generateToken.js";
 
 const REFRESH_TOKEN_EXPIRY_DAYS = 7;
+
+function hashToken(token) {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
 
 // Register a new user
 export async function registerService({ name, email, password, role}) {
@@ -12,7 +17,7 @@ export async function registerService({ name, email, password, role}) {
 
   if (userExist) throw new Error("Email already exists");
 
-  const hashedPassword = await bcrypt.hash(password, 10);
+  const hashedPassword = await bcrypt.hash(password, 12);
 
   // Create user
   const user = await prisma.user.create({
@@ -30,7 +35,7 @@ export async function registerService({ name, email, password, role}) {
   // Store refresh token
   await prisma.refreshToken.create({
     data: {
-      token: refreshToken,
+      token: hashToken(refreshToken),
       userId: user.id,
       expiresAt: new Date(Date.now() + REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000)
     }
@@ -57,7 +62,7 @@ export async function loginService({ email, password }) {
   // Store refresh token
   await prisma.refreshToken.create({
     data: {
-      token: refreshToken,
+      token: hashToken(refreshToken),
       userId: user.id,
       expiresAt: new Date(Date.now() + REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000)
     }
@@ -72,7 +77,7 @@ export async function loginService({ email, password }) {
 
 export async function refreshTokenService(oldRefreshToken) {
   const storedToken = await prisma.refreshToken.findUnique({
-    where: { token: oldRefreshToken },
+    where: { token: hashToken(oldRefreshToken) },
     include: { user: true }
   });
 
@@ -92,12 +97,12 @@ export async function refreshTokenService(oldRefreshToken) {
 
   // Replace old refresh token with new one
   await prisma.refreshToken.delete({
-    where: { token: oldRefreshToken }
+    where: { token: hashToken(oldRefreshToken) }
   });
 
   await prisma.refreshToken.create({
     data: {
-      token: newRefreshToken,
+      token: hashToken(newRefreshToken),
       userId: storedToken.user.id,
       expiresAt: new Date(Date.now() + REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000)
     }
@@ -110,7 +115,7 @@ export async function logoutService(refreshToken) {
   if (!refreshToken) throw new Error("Refresh token is required");
 
   await prisma.refreshToken.deleteMany({
-    where: { token: refreshToken }
+    where: { token: hashToken(refreshToken) }
   });
 }
 
