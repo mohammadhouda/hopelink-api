@@ -63,6 +63,10 @@ export async function loginService({ email, password }) {
     }
   });
 
+  user.password = undefined; // Hide password
+  user.createdAt = undefined; // Hide createdAt
+  user.isActive  = undefined; // Hide isActive
+
   return { user, accessToken, refreshToken };
 }
 
