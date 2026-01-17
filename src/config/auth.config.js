@@ -2,7 +2,7 @@ const authConfig = {
   // Rate limiting
   rateLimit: {
     windowMs: 15 * 60 * 1000, // 15 minutes
-    maxAttempts: parseInt(process.env.RATE_LIMIT_MAX_ATTEMPTS) || 20
+    maxAttempts: parseInt(process.env.RATE_LIMIT_MAX_ATTEMPTS) || 10
   },
 
   // Account lockout
