@@ -17,7 +17,7 @@ const router = express.Router();
 router.post("/register", rateLimiter, registerController);
 router.post("/login", rateLimiter, loginController);
 router.post("/refresh", rateLimiter, refreshController);
-router.post("/logout", logoutController);
+router.post("/logout", authMiddleware, logoutController);
 router.post("/logout-all", authMiddleware, logoutAllController);
 
 // Session management
