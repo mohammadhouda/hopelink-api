@@ -29,7 +29,6 @@ model User {
   projects       Project[]
   applications   Application[]
   refreshTokens  RefreshToken[]
-  sessions       UserSession[]
   lockout        AccountLockout?
 }
 
@@ -134,7 +133,7 @@ model RefreshToken {
   expiresAt DateTime
   createdAt DateTime @default(now())
 
-  // Security fields
+  // Security/Session fields
   ipAddress  String?
   userAgent  String?
   deviceInfo String?
@@ -146,7 +145,6 @@ model RefreshToken {
   @@index([family])
 }
 
-// Track failed login attempts
 model LoginAttempt {
   id        Int      @id @default(autoincrement())
   email     String
@@ -161,22 +159,6 @@ model LoginAttempt {
   @@index([createdAt])
 }
 
-// Track active sessions
-model UserSession {
-  id         String   @id @default(uuid())
-  userId     Int
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  ipAddress  String
-  userAgent  String?
-  deviceInfo String?
-  location   String?
-  lastActive DateTime @default(now())
-  createdAt  DateTime @default(now())
-
-  @@index([userId])
-}
-
-// Account lockout tracking
 model AccountLockout {
   id           Int      @id @default(autoincrement())
   userId       Int      @unique

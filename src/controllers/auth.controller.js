@@ -1,4 +1,3 @@
-// controllers/auth.controller.js
 import {
   registerService,
   loginService,
@@ -17,7 +16,6 @@ const COOKIE_OPTIONS = {
   sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
 };
 
-// Extract client info from request
 function getClientInfo(req) {
   const userAgent = req.headers["user-agent"] || "";
   return {
@@ -101,7 +99,7 @@ export async function refreshController(req, res) {
   } catch (err) {
     res.clearCookie("access_token");
     res.clearCookie("refresh_token", { path: "/api/auth" });
-    
+
     const status = err.message.includes("reuse") ? 403 : 401;
     return failure(res, err.message, status);
   }
@@ -117,6 +115,9 @@ export async function logoutController(req, res) {
 
     return success(res, null, "Logged out successfully.", 200);
   } catch (err) {
+    // Clear cookies anyway on logout
+    res.clearCookie("access_token");
+    res.clearCookie("refresh_token", { path: "/api/auth" });
     return failure(res, err.message, 400);
   }
 }
@@ -134,20 +135,24 @@ export async function logoutAllController(req, res) {
   }
 }
 
-// Get user's active sessions
 export async function getSessionsController(req, res) {
   try {
-    const sessions = await getActiveSessionsService(req.user.id);
+    const sessions = await getActiveSessionsService(req.user.id, req.user.sessionId);
     return success(res, sessions, "Sessions retrieved.", 200);
   } catch (err) {
     return failure(res, err.message, 400);
   }
 }
 
-// Revoke specific session
 export async function revokeSessionController(req, res) {
   try {
     const { sessionId } = req.params;
+
+    // Prevent revoking current session
+    if (sessionId === req.user.sessionId) {
+      return failure(res, "Cannot revoke current session. Use logout instead.", 400);
+    }
+
     await revokeSessionService(req.user.id, sessionId);
     return success(res, null, "Session revoked.", 200);
   } catch (err) {
