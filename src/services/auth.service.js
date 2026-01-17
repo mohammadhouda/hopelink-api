@@ -143,6 +143,17 @@ export async function loginService({ email, password }, clientInfo) {
   // Check for suspicious activity
   const suspiciousCheck = await detectSuspiciousActivity(user.id, clientInfo.ipAddress);
 
+  // Revoke existing tokens from this device
+  await prisma.refreshToken.updateMany({
+    where: {
+      userId: user.id,
+      ipAddress: clientInfo.ipAddress,
+      userAgent: clientInfo.userAgent,
+      isRevoked: false
+    },
+    data: { isRevoked: true }
+  });
+
   // Generate tokens
   const refreshToken = generateRefreshToken();
   const tokenFamily = generateTokenFamily();
@@ -192,36 +203,51 @@ export async function loginService({ email, password }, clientInfo) {
 }
 
 export async function refreshTokenService(oldRefreshToken, clientInfo) {
+  const hashedToken = hashToken(oldRefreshToken);
+  console.log("Refreshing token for hashed token:", oldRefreshToken, "->", hashedToken);
+  // First, check token status outside transaction
+  const storedToken = await prisma.refreshToken.findUnique({
+    where: { token: hashedToken },
+    include: { user: true }
+  });
+
+  // Token doesn't exist
+  if (!storedToken) {
+    throw new Error("Invalid refresh token");
+  }
+
+  // Token was revoked (possible theft detected) - handle OUTSIDE transaction
+  if (storedToken.isRevoked) {
+    // Revoke all tokens for this user (security breach)
+    await prisma.refreshToken.updateMany({
+      where: { family: storedToken.family },
+      data: { isRevoked: true }
+    });
+    
+    console.log(`Security: Revoked all sessions for user ${storedToken.userId} due to token reuse`);
+    throw new Error("Token reuse detected. All sessions revoked for security.");
+  }
+
+  // Token expired
+  if (storedToken.expiresAt < new Date()) {
+    await prisma.refreshToken.delete({
+      where: { id: storedToken.id }
+    });
+    throw new Error("Refresh token expired");
+  }
+
+  // Now do the rotation in a transaction
   return await prisma.$transaction(async (tx) => {
-    const storedToken = await tx.refreshToken.findUnique({
-      where: { token: hashToken(oldRefreshToken) },
-      include: { user: true }
+    // Double-check token hasn't been revoked
+    const currentToken = await tx.refreshToken.findUnique({
+      where: { id: storedToken.id }
     });
 
-    // Token doesn't exist
-    if (!storedToken) {
-      throw new Error("Invalid refresh token");
+    if (!currentToken || currentToken.isRevoked) {
+      throw new Error("Token already used");
     }
 
-    // Token was revoked (possible theft detected)
-    if (storedToken.isRevoked) {
-      // Revoke all tokens in this family (security breach)
-      await tx.refreshToken.updateMany({
-        where: { family: storedToken.family },
-        data: { isRevoked: true }
-      });
-      throw new Error("Token reuse detected. All sessions revoked for security.");
-    }
-
-    // Token expired
-    if (storedToken.expiresAt < new Date()) {
-      await tx.refreshToken.delete({
-        where: { id: storedToken.id }
-      });
-      throw new Error("Refresh token expired");
-    }
-
-    // Mark old token as revoked (not deleted, for reuse detection)
+    // Mark old token as revoked
     await tx.refreshToken.update({
       where: { id: storedToken.id },
       data: { isRevoked: true }
@@ -238,7 +264,7 @@ export async function refreshTokenService(oldRefreshToken, clientInfo) {
         ipAddress: clientInfo.ipAddress,
         userAgent: clientInfo.userAgent,
         deviceInfo: JSON.stringify(clientInfo.deviceInfo),
-        family: storedToken.family // Keep same family for rotation detection
+        family: storedToken.family
       }
     });
 
