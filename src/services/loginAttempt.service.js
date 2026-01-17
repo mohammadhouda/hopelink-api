@@ -1,8 +1,10 @@
 import prisma from "../config/prisma.js";
+import authConfig from "../config/auth.config.js";
 
-const MAX_FAILED_ATTEMPTS = 5;
-const LOCKOUT_DURATION_MINUTES = 15;
-const ATTEMPT_WINDOW_MINUTES = 15;
+const MAX_FAILED_ATTEMPTS = authConfig.lockout.maxFailedAttempts;
+const LOCKOUT_DURATION_MINUTES = authConfig.lockout.durationMinutes;
+const ATTEMPT_WINDOW_MINUTES = authConfig.lockout.attemptWindowMinutes;
+const SUSPICIOUS_IP_THRESHOLD = authConfig.sessions.maxPerUser;
 
 export async function recordLoginAttempt({ email, ipAddress, userAgent, success, reason }) {
   await prisma.loginAttempt.create({
@@ -93,7 +95,7 @@ export async function detectSuspiciousActivity(userId, currentIp) {
   const uniqueIps = new Set(recentSessions.map(s => s.ipAddress).filter(Boolean));
   
   // Flag if more than 3 different IPs in 24 hours
-  if (uniqueIps.size > 3 && !uniqueIps.has(currentIp)) {
+  if (uniqueIps.size > SUSPICIOUS_IP_THRESHOLD && !uniqueIps.has(currentIp)) {
     return { suspicious: true, reason: "multiple_ips" };
   }
 

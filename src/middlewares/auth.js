@@ -19,12 +19,6 @@ function extractToken(req) {
   if (req.cookies?.[TOKEN_COOKIE_NAME]) {
     return req.cookies[TOKEN_COOKIE_NAME];
   }
-
-  const authHeader = req.headers.authorization;
-  if (authHeader?.startsWith(BEARER_PREFIX)) {
-    return authHeader.substring(BEARER_PREFIX.length);
-  }
-
   return null;
 }
 

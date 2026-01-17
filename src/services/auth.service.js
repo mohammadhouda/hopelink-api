@@ -9,9 +9,10 @@ import {
   clearLockout,
   detectSuspiciousActivity
 } from "./loginAttempt.service.js";
+import authConfig from "../config/auth.config.js";
 
-const REFRESH_TOKEN_EXPIRY_DAYS = 7;
-const MIN_PASSWORD_LENGTH = 8;
+const REFRESH_TOKEN_EXPIRY_DAYS = authConfig.tokens.refreshTokenExpiryDays;
+const MIN_PASSWORD_LENGTH = authConfig.password.minLength;
 
 function validatePassword(password) {
   if (!password || password.length < MIN_PASSWORD_LENGTH) {
@@ -28,7 +29,7 @@ export async function registerService({ name, email, password }, clientInfo) {
 
   if (userExist) throw new Error("Email already exists");
 
-  const hashedPassword = await bcrypt.hash(password, 12);
+  const hashedPassword = await bcrypt.hash(password, authConfig.password.bcryptRounds);
   const tokenFamily = generateTokenFamily();
 
   const user = await prisma.user.create({
@@ -91,7 +92,7 @@ export async function loginService({ email, password }, clientInfo) {
         success: false,
         reason: "account_locked"
       });
-      throw new Error(`Account locked. Try again in ${lockoutStatus.remainingMinutes} minutes`);
+      throw new Error(`Too many failed attempts. Try again in ${lockoutStatus.remainingMinutes} minutes`);
     }
   }
 
@@ -204,7 +205,6 @@ export async function loginService({ email, password }, clientInfo) {
 
 export async function refreshTokenService(oldRefreshToken, clientInfo) {
   const hashedToken = hashToken(oldRefreshToken);
-  console.log("Refreshing token for hashed token:", oldRefreshToken, "->", hashedToken);
   // First, check token status outside transaction
   const storedToken = await prisma.refreshToken.findUnique({
     where: { token: hashedToken },
