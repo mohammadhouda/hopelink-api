@@ -75,7 +75,7 @@ export async function loginController(req, res) {
 
 export async function refreshController(req, res) {
   try {
-    const refreshToken = req.cookies?.refresh_token || req.body.refreshToken;
+    const refreshToken = req.cookies?.refresh_token;
 
     if (!refreshToken) {
       throw new Error("Refresh token is required");
