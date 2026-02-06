@@ -7,6 +7,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// =======================
+// Users and Roles
+// =======================
 model User {
   id        Int      @id @default(autoincrement())
   name      String
@@ -32,6 +35,9 @@ model User {
   lockout       AccountLockout?
 }
 
+// =======================
+// User Profiles
+// =======================
 model UserProfile {
   id        Int      @id @default(autoincrement())
   phone     String?
@@ -86,11 +92,10 @@ model VolunteerPreference {
   @@index([type, value])
 }
 
-enum PreferenceType {
-  CITY
-  CATEGORY
-}
 
+// =======================
+// Charity Accounts & Projects
+// =======================
 model CharityAccount {
   id          Int      @id @default(autoincrement())
   name        String
@@ -104,16 +109,15 @@ model CharityAccount {
 
   isVerified Boolean @default(false)
 
-  userId           Int @unique
-  createdByAdminId Int?
-
+  userId Int @unique
   createdAt DateTime @default(now())
 
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  projects Project[]
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  charityProjects CharityProject[]
 }
 
-model Project {
+
+model CharityProject {
   id          Int           @id @default(autoincrement())
   title       String
   description String
@@ -130,21 +134,27 @@ model Project {
   @@index([status])
 }
 
+// =======================
+// Applications
+// =======================
 model Application {
   id        Int      @id @default(autoincrement())
   message   String?
   createdAt DateTime @default(now())
 
-  userId    Int
-  projectId Int
+  userId        Int
+  charityProjectId Int
 
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  charityProject CharityProject @relation(fields: [charityProjectId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, projectId])
-  @@index([projectId])
+  @@unique([userId, charityProjectId])
+  @@index([charityProjectId])
 }
 
+// =======================
+// Authentication & Security
+// =======================
 model RefreshToken {
   id        String   @id @default(uuid())
   token     String   @unique
@@ -190,6 +200,9 @@ model AccountLockout {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+// =======================
+// Enums
+// =======================
 enum Role {
   USER
   ADMIN
@@ -200,4 +213,9 @@ enum ProjectStatus {
   ACTIVE
   PAUSED
   CLOSED
+}
+
+enum PreferenceType {
+  CITY
+  CATEGORY
 }
