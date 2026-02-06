@@ -90,6 +90,15 @@ export async function getUsersService() {
       role: true,
       isActive: true,
       createdAt: true,
+      profile: {
+        select: {
+          phone: true,
+          avatarUrl: true,
+          city: true,
+          country: true,
+          bio: true
+        }
+      }
     }
   });
 }
@@ -168,7 +177,17 @@ export async function updateUserService(id, updateData) {
 
     return tx.user.findUnique({
       where: { id: userId },
-      include: { userProfile: true }
+      include: {
+        profile: {
+          select: {
+            phone: true,
+            avatarUrl: true,
+            city: true,
+            country: true,
+            bio: true
+          }
+        }
+      }
     });
   });
 }

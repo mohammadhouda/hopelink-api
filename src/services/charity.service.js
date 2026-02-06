@@ -2,7 +2,10 @@ import prisma from "../config/prisma.js";
 import bcrypt from "bcryptjs";
 
 export async function getCharitiesService() {
-  return prisma.charity.findMany({
+  return prisma.charityAccount.findMany({
+    where: {
+      user: { isActive: true }
+    },
     include: {
       user: {
         select: {
@@ -38,7 +41,7 @@ export async function createCharitiesService(data) {
       }
     });
 
-    const charity = await tx.charity.create({
+    const charity = await tx.charityAccount.create({
       data: {
         name: data.name,
         logoUrl: data.logoUrl || null,
@@ -87,7 +90,7 @@ export async function updateCharityService(id, data) {
     throw new Error("No valid fields to update.");
   }
 
-  // Split updates between User & Charity
+  // Split updates between User & CharityAccount
   const userData = {};
   const charityData = {};
 
@@ -113,13 +116,13 @@ export async function updateCharityService(id, data) {
     }
 
     if (Object.keys(charityData).length > 0) {
-      await tx.charity.update({
+      await tx.charityAccount.update({
         where: { userId: Number(id) },
         data: charityData
       });
     }
 
-    return tx.charity.findUnique({
+    return tx.charityAccount.findUnique({
       where: { userId: Number(id) },
       include: { user: true }
     });
@@ -153,5 +156,3 @@ export async function deleteCharityService(id) {
     };
   });
 }
-
-

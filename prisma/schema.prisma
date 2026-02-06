@@ -16,20 +16,20 @@ model User {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
 
-  // Security tracking
+  // Security
   lastLoginAt       DateTime?
   lastLoginIp       String?
   passwordChangedAt DateTime?
 
-  // Profiles
-  userProfile      UserProfile?
+  // Role-based profiles
+  profile          UserProfile?
   volunteerProfile VolunteerProfile?
-  charityProfile   Charity?
+  charityAccount   CharityAccount?
 
-  projects       Project[]
-  applications   Application[]
-  refreshTokens  RefreshToken[]
-  lockout        AccountLockout?
+  // Relations
+  applications  Application[]
+  refreshTokens RefreshToken[]
+  lockout       AccountLockout?
 }
 
 model UserProfile {
@@ -40,14 +40,58 @@ model UserProfile {
   country   String?
   bio       String?
 
-  userId    Int      @unique
-  user      User     @relation(fields: [userId], references: [id])
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-model Charity {
+model VolunteerProfile {
+  id Int @id @default(autoincrement())
+
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  isAvailable      Boolean @default(true)
+  availabilityNote String?
+  experience       String?
+  isVerified       Boolean @default(false)
+
+  skills      VolunteerSkill[]
+  preferences VolunteerPreference[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VolunteerSkill {
+  id          Int @id @default(autoincrement())
+  volunteerId Int
+  skill       String
+
+  volunteer VolunteerProfile @relation(fields: [volunteerId], references: [id], onDelete: Cascade)
+
+  @@index([skill])
+}
+
+model VolunteerPreference {
+  id          Int @id @default(autoincrement())
+  volunteerId Int
+  type        PreferenceType
+  value       String
+
+  volunteer VolunteerProfile @relation(fields: [volunteerId], references: [id], onDelete: Cascade)
+
+  @@index([type, value])
+}
+
+enum PreferenceType {
+  CITY
+  CATEGORY
+}
+
+model CharityAccount {
   id          Int      @id @default(autoincrement())
   name        String
   description String?
@@ -58,36 +102,15 @@ model Charity {
   city        String?
   category    String?
 
-  isVerified  Boolean  @default(false)
-
-  userId           Int      @unique
-  createdByAdminId Int?
-
-  createdAt   DateTime @default(now())
-
-  user        User     @relation(fields: [userId], references: [id])
-  projects    Project[]
-}
-
-model VolunteerProfile {
-  id Int @id @default(autoincrement())
-
-  userId Int @unique
-  user   User @relation(fields: [userId], references: [id])
-
-  isAvailable      Boolean  @default(true)
-  availabilityNote String?
-
-  preferredCategories String[]
-  preferredCities     String[]
-
-  skills     String[]
-  experience String?
-
   isVerified Boolean @default(false)
 
+  userId           Int @unique
+  createdByAdminId Int?
+
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projects Project[]
 }
 
 model Project {
@@ -99,14 +122,11 @@ model Project {
   createdAt   DateTime      @default(now())
 
   charityId Int
-  userId    Int?
+  charity   CharityAccount @relation(fields: [charityId], references: [id], onDelete: Cascade)
 
-  charity      Charity       @relation(fields: [charityId], references: [id])
-  user         User?         @relation(fields: [userId], references: [id])
   applications Application[]
 
   @@index([charityId])
-  @@index([userId])
   @@index([status])
 }
 
@@ -118,8 +138,8 @@ model Application {
   userId    Int
   projectId Int
 
-  user    User    @relation(fields: [userId], references: [id])
-  project Project @relation(fields: [projectId], references: [id])
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@unique([userId, projectId])
   @@index([projectId])
@@ -129,19 +149,19 @@ model RefreshToken {
   id        String   @id @default(uuid())
   token     String   @unique
   userId    Int
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
   createdAt DateTime @default(now())
 
-  // Security/Session fields
   ipAddress  String?
   userAgent  String?
   deviceInfo String?
   family     String?
   isRevoked  Boolean @default(false)
 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
-  @@index([token])
+  @@index([expiresAt])
   @@index([family])
 }
 
@@ -162,11 +182,12 @@ model LoginAttempt {
 model AccountLockout {
   id           Int      @id @default(autoincrement())
   userId       Int      @unique
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   lockoutUntil DateTime
   attempts     Int      @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 enum Role {
