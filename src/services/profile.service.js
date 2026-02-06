@@ -36,7 +36,7 @@ export async function updateProfileService(userId, updatedData) {
     userData.passwordChangedAt = new Date();
   }
 
-  // Fields that belong to the UserProfile model
+  // Fields that belong to the BaseProfile model
   const profileFields = ['phone', 'avatarUrl', 'city', 'country', 'bio'];
   const profileData = {};
   for (const key of profileFields) {
@@ -61,7 +61,7 @@ export async function updateProfileService(userId, updatedData) {
     }
 
     if (hasProfileUpdate) {
-      await tx.userProfile.upsert({
+      await tx.BaseProfile.upsert({
         where: { userId },
         create: { userId, ...profileData },
         update: profileData

@@ -58,9 +58,9 @@ export async function createUserService({
       }
     });
 
-    // Create UserProfile ONLY for normal users
+    // Create BaseProfile ONLY for normal users
     if (role === 'USER') {
-      await tx.userProfile.create({
+      await tx.BaseProfile.create({
         data: {
           userId: user.id,
           phone: phone || null,
@@ -165,7 +165,7 @@ export async function updateUserService(id, updateData) {
     }
 
     if (Object.keys(profileData).length > 0) {
-      await tx.userProfile.upsert({
+      await tx.BaseProfile.upsert({
         where: { userId },
         update: profileData,
         create: {

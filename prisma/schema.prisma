@@ -25,7 +25,7 @@ model User {
   passwordChangedAt DateTime?
 
   // Role-based profiles
-  profile          UserProfile?
+  baseProfile      BaseProfile?
   volunteerProfile VolunteerProfile?
   charityAccount   CharityAccount?
 
@@ -36,9 +36,9 @@ model User {
 }
 
 // =======================
-// User Profiles
+// Profiles
 // =======================
-model UserProfile {
+model BaseProfile {
   id        Int      @id @default(autoincrement())
   phone     String?
   avatarUrl String?
@@ -92,6 +92,10 @@ model VolunteerPreference {
   @@index([type, value])
 }
 
+enum PreferenceType {
+  CITY
+  CATEGORY
+}
 
 // =======================
 // Charity Accounts & Projects
@@ -105,23 +109,22 @@ model CharityAccount {
   phone       String?
   address     String?
   city        String?
-  category    String?
+  category    Category?
 
   isVerified Boolean @default(false)
 
-  userId Int @unique
+  userId    Int  @unique
   createdAt DateTime @default(now())
 
   user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   charityProjects CharityProject[]
 }
 
-
 model CharityProject {
   id          Int           @id @default(autoincrement())
   title       String
   description String
-  category    String?
+  category    Category?
   status      ProjectStatus @default(ACTIVE)
   createdAt   DateTime      @default(now())
 
@@ -142,7 +145,7 @@ model Application {
   message   String?
   createdAt DateTime @default(now())
 
-  userId        Int
+  userId           Int
   charityProjectId Int
 
   user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -215,7 +218,11 @@ enum ProjectStatus {
   CLOSED
 }
 
-enum PreferenceType {
-  CITY
-  CATEGORY
+enum Category {
+  EDUCATION
+  HEALTH
+  ENVIRONMENT
+  ANIMAL_WELFARE
+  SOCIAL
+  OTHER
 }
