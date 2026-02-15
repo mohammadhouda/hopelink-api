@@ -10,7 +10,7 @@ export async function getProfileService(userId) {
       email: true,
       role: true,
       createdAt: true,
-      profile: {
+      baseProfile: {
         select: {
           phone: true,
           avatarUrl: true,
