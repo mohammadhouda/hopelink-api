@@ -3,6 +3,7 @@ import {
   createCharitiesService,
   updateCharityService,
   deleteCharityService,
+  getCharityService,
 } from "../services/charity.service.js";
 import { success, failure } from "../utils/response.js";
 
@@ -60,6 +61,17 @@ export async function createCharityController(req, res) {
     return success(res, result, "Charity created successfully.", 201);
   } catch (error) {
     return failure(res, error.message);
+  }
+}
+
+export async function getCharityController(req, res) {
+  try {
+    const { userId } = req.params;
+    const charity = await getCharityService(userId);
+    return success(res, charity, "Charity fetched successfully.", 200);
+  } catch (error) {
+    const status = error.message === "Charity not found." ? 404 : 500;
+    return failure(res, error.message, status);
   }
 }
 

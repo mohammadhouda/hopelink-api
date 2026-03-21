@@ -10,32 +10,88 @@ export async function getCharitiesService({
   skip = 0,
   take = 8,
 } = {}) {
-  const where = {
-    user: { isActive: true },
-    ...(status === "verified" && { isVerified: true }),
-    ...(status === "unverified" && { isVerified: false }),
-    ...(category && category !== "all" && { category }),
-    ...(city && city !== "all" && { city }),
-    ...(search && {
-      OR: [
-        { name: { contains: search, mode: "insensitive" } },
-        { city: { contains: search, mode: "insensitive" } },
-        { user: { email: { contains: search, mode: "insensitive" } } },
-      ],
-    }),
-  };
+  const filters = [];
+  const values = [];
 
-  const [charities, total] = await prisma.$transaction([
-    prisma.charityAccount.findMany({
-      where,
-      skip,
-      take,
-      include: { user: { select: { id: true, email: true, isActive: true } } },
-    }),
-    prisma.charityAccount.count({ where }),
+  // Base condition
+  filters.push(`u."isActive" = true`);
+
+  // Status
+  if (status === "verified") {
+    filters.push(`c."isVerified" = true`);
+  } else if (status === "unverified") {
+    filters.push(`c."isVerified" = false`);
+  }
+
+  // Category
+  if (category && category !== "all") {
+    values.push(category);
+    filters.push(`c."category" = $${values.length}::"Category"`);
+  }
+
+  // City
+  if (city && city !== "all") {
+    values.push(city);
+    filters.push(`c."city" = $${values.length}`);
+  }
+
+  let searchQuery = "";
+  if (search) {
+    values.push(search);
+    searchQuery = `
+      AND c.search_vector @@ plainto_tsquery('english', $${values.length}::text)
+    `;
+  }
+
+  const whereClause = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
+
+  const query = `
+    SELECT 
+      c.id,
+      c.name,
+      c.description,
+      c."logoUrl",
+      c."websiteUrl",
+      c.phone,
+      c.address,
+      c.city,
+      c.category,
+      c."isVerified",
+      c."userId",
+      c."createdAt",
+      u.id as "userId",
+      u.email as "email",
+      u."isActive",
+      ${
+        search
+          ? `ts_rank(c.search_vector, plainto_tsquery('english', $${values.length})) as rank`
+          : `0 as rank`
+      }
+    FROM "CharityAccount" c
+    JOIN "User" u ON c."userId" = u.id
+    ${whereClause}
+    ${search ? searchQuery : ""}
+    ORDER BY rank DESC, c.id DESC
+    LIMIT ${take} OFFSET ${skip}
+  `;
+
+  const countQuery = `
+    SELECT COUNT(*)
+    FROM "CharityAccount" c
+    JOIN "User" u ON c."userId" = u.id
+    ${whereClause}
+    ${search ? searchQuery : ""}
+  `;
+
+  const [charities, totalResult] = await prisma.$transaction([
+    prisma.$queryRawUnsafe(query, ...values),
+    prisma.$queryRawUnsafe(countQuery, ...values),
   ]);
 
-  return { charities, total };
+  return {
+    charities,
+    total: Number(totalResult[0].count),
+  };
 }
 
 export async function createCharitiesService(data) {
@@ -85,6 +141,7 @@ export async function updateCharityService(id, data) {
     "name",
     "email",
     "isActive",
+    "isVerified", // ← added so verify/revoke works
     "description",
     "logoUrl",
     "phone",
@@ -95,7 +152,6 @@ export async function updateCharityService(id, data) {
   ];
 
   const updateData = {};
-
   for (const key of allowedFields) {
     if (data[key] !== undefined) {
       updateData[key] = data[key];
@@ -127,6 +183,8 @@ export async function updateCharityService(id, data) {
   if (updateData.city !== undefined) charityData.city = updateData.city;
   if (updateData.category !== undefined)
     charityData.category = updateData.category;
+  if (typeof updateData.isVerified === "boolean")
+    charityData.isVerified = updateData.isVerified;
 
   return await prisma.$transaction(async (tx) => {
     if (Object.keys(userData).length > 0) {
@@ -145,7 +203,17 @@ export async function updateCharityService(id, data) {
 
     return tx.charityAccount.findUnique({
       where: { userId: Number(id) },
-      include: { user: true },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            isActive: true,
+            lastLoginAt: true,
+            createdAt: true,
+          },
+        },
+      },
     });
   });
 }
@@ -176,4 +244,35 @@ export async function deleteCharityService(id) {
       userId,
     };
   });
+}
+
+export async function getCharityService(userId) {
+  const charity = await prisma.charityAccount.findUnique({
+    where: { userId: Number(userId) },
+    include: {
+      user: {
+        select: {
+          id: true,
+          email: true,
+          isActive: true,
+          lastLoginAt: true,
+          createdAt: true,
+        },
+      },
+      charityProjects: {
+        orderBy: { createdAt: "desc" },
+        include: {
+          _count: {
+            select: { applications: true },
+          },
+        },
+      },
+    },
+  });
+
+  if (!charity) {
+    throw new Error("Charity not found.");
+  }
+
+  return charity;
 }
