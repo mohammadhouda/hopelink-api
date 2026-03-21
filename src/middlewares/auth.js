@@ -3,7 +3,6 @@ import prisma from "../config/prisma.js";
 import { failure } from "../utils/response.js";
 
 const TOKEN_COOKIE_NAME = "access_token";
-const BEARER_PREFIX = "Bearer ";
 
 const ERROR_MESSAGES = {
   NO_TOKEN: "Authentication required",
@@ -12,7 +11,7 @@ const ERROR_MESSAGES = {
   USER_NOT_FOUND: "User not found",
   ACCOUNT_DISABLED: "Account is disabled",
   MALFORMED_TOKEN: "Malformed authentication token",
-  SESSION_REVOKED: "Session has been revoked"
+  SESSION_REVOKED: "Session has been revoked",
 };
 
 function extractToken(req) {
@@ -23,10 +22,10 @@ function extractToken(req) {
 }
 
 function decodeToken(token) {
-  const jwtSecret = process.env.JWT_SECRET;
+  const jwtSecret = process.env.JWT_SECRET_KEY;
 
   if (!jwtSecret) {
-    throw new Error("JWT_SECRET is not configured");
+    throw new Error("JWT_SECRET_KEY is not configured");
   }
 
   const decoded = jwt.verify(token, jwtSecret);
@@ -65,7 +64,7 @@ async function authMiddleware(req, res, next) {
     // Verify session (RefreshToken) is still valid
     if (decoded.sessionId) {
       const session = await prisma.refreshToken.findUnique({
-        where: { id: decoded.sessionId }
+        where: { id: decoded.sessionId },
       });
 
       if (!session || session.isRevoked) {
@@ -78,8 +77,8 @@ async function authMiddleware(req, res, next) {
       select: {
         id: true,
         role: true,
-        isActive: true
-      }
+        isActive: true,
+      },
     });
 
     if (!user) {
@@ -93,7 +92,7 @@ async function authMiddleware(req, res, next) {
     req.user = {
       id: user.id,
       role: user.role,
-      sessionId: decoded.sessionId
+      sessionId: decoded.sessionId,
     };
 
     next();

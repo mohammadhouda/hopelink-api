@@ -1,28 +1,47 @@
 import prisma from "../config/prisma.js";
 import bcrypt from "bcryptjs";
 
-export async function getCharitiesService() {
-  return prisma.charityAccount.findMany({
-    where: {
-      user: { isActive: true }
-    },
-    include: {
-      user: {
-        select: {
-          id: true,
-          email: true,
-          isActive: true
-        }
-      }
-    }
-  });
+// charity.service.js
+export async function getCharitiesService({
+  search,
+  status,
+  category,
+  city,
+  skip = 0,
+  take = 8,
+} = {}) {
+  const where = {
+    user: { isActive: true },
+    ...(status === "verified" && { isVerified: true }),
+    ...(status === "unverified" && { isVerified: false }),
+    ...(category && category !== "all" && { category }),
+    ...(city && city !== "all" && { city }),
+    ...(search && {
+      OR: [
+        { name: { contains: search, mode: "insensitive" } },
+        { city: { contains: search, mode: "insensitive" } },
+        { user: { email: { contains: search, mode: "insensitive" } } },
+      ],
+    }),
+  };
+
+  const [charities, total] = await prisma.$transaction([
+    prisma.charityAccount.findMany({
+      where,
+      skip,
+      take,
+      include: { user: { select: { id: true, email: true, isActive: true } } },
+    }),
+    prisma.charityAccount.count({ where }),
+  ]);
+
+  return { charities, total };
 }
 
 export async function createCharitiesService(data) {
   return await prisma.$transaction(async (tx) => {
-
     const userExist = await tx.user.findUnique({
-      where: { email: data.email }
+      where: { email: data.email },
     });
 
     if (userExist) {
@@ -36,9 +55,9 @@ export async function createCharitiesService(data) {
         name: data.name,
         email: data.email,
         password: hashedPassword,
-        role: 'CHARITY',
+        role: "CHARITY",
         isActive: true,
-      }
+      },
     });
 
     const charity = await tx.charityAccount.create({
@@ -51,31 +70,28 @@ export async function createCharitiesService(data) {
         city: data.city || null,
         category: data.category || null,
         userId: user.id,
-        createdByAdminId: data.createdByAdminId || null
-      }
+      },
     });
 
     return {
       user,
-      charity
+      charity,
     };
   });
 }
 
-
 export async function updateCharityService(id, data) {
-
   const allowedFields = [
-    'name',
-    'email',
-    'isActive',
-    'description',
-    'logoUrl',
-    'phone',
-    'address',
-    'websiteUrl',
-    'city',
-    'category'
+    "name",
+    "email",
+    "isActive",
+    "description",
+    "logoUrl",
+    "phone",
+    "address",
+    "websiteUrl",
+    "city",
+    "category",
   ];
 
   const updateData = {};
@@ -96,35 +112,40 @@ export async function updateCharityService(id, data) {
 
   if (updateData.name) userData.name = updateData.name;
   if (updateData.email) userData.email = updateData.email;
-  if (typeof updateData.isActive === 'boolean') userData.isActive = updateData.isActive;
+  if (typeof updateData.isActive === "boolean")
+    userData.isActive = updateData.isActive;
 
-  if (updateData.description !== undefined) charityData.description = updateData.description;
-  if (updateData.logoUrl !== undefined) charityData.logoUrl = updateData.logoUrl;
+  if (updateData.description !== undefined)
+    charityData.description = updateData.description;
+  if (updateData.logoUrl !== undefined)
+    charityData.logoUrl = updateData.logoUrl;
   if (updateData.phone !== undefined) charityData.phone = updateData.phone;
-  if (updateData.address !== undefined) charityData.address = updateData.address;
-  if (updateData.websiteUrl !== undefined) charityData.websiteUrl = updateData.websiteUrl;
+  if (updateData.address !== undefined)
+    charityData.address = updateData.address;
+  if (updateData.websiteUrl !== undefined)
+    charityData.websiteUrl = updateData.websiteUrl;
   if (updateData.city !== undefined) charityData.city = updateData.city;
-  if (updateData.category !== undefined) charityData.category = updateData.category;
+  if (updateData.category !== undefined)
+    charityData.category = updateData.category;
 
   return await prisma.$transaction(async (tx) => {
-
     if (Object.keys(userData).length > 0) {
       await tx.user.update({
         where: { id: Number(id) },
-        data: userData
+        data: userData,
       });
     }
 
     if (Object.keys(charityData).length > 0) {
       await tx.charityAccount.update({
         where: { userId: Number(id) },
-        data: charityData
+        data: charityData,
       });
     }
 
     return tx.charityAccount.findUnique({
       where: { userId: Number(id) },
-      include: { user: true }
+      include: { user: true },
     });
   });
 }
@@ -136,9 +157,9 @@ export async function deleteCharityService(id) {
     const user = await tx.user.findFirst({
       where: {
         id: userId,
-        role: 'CHARITY',
-        isActive: true
-      }
+        role: "CHARITY",
+        isActive: true,
+      },
     });
 
     if (!user) {
@@ -147,12 +168,12 @@ export async function deleteCharityService(id) {
 
     await tx.user.update({
       where: { id: userId },
-      data: { isActive: false }
+      data: { isActive: false },
     });
 
     return {
       message: "Charity disabled successfully",
-      userId
+      userId,
     };
   });
 }

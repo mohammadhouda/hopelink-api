@@ -7,7 +7,7 @@ import {
   logoutController,
   logoutAllController,
   getSessionsController,
-  revokeSessionController
+  revokeSessionController,
 } from "../controllers/auth.controller.js";
 import authMiddleware from "../middlewares/auth.js";
 import { rateLimiter } from "../middlewares/rateLimiter.js";
