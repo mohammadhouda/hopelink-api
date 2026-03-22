@@ -18,6 +18,7 @@ model User {
   role      Role     @default(USER)
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
+  search_vector Unsupported("tsvector")
 
   // Security
   lastLoginAt       DateTime?
@@ -210,6 +211,7 @@ enum Role {
   USER
   ADMIN
   CHARITY
+  VOLUNTEER
 }
 
 enum ProjectStatus {

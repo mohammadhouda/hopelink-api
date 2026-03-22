@@ -1,87 +1,109 @@
 import prisma from "../config/prisma.js";
 import bcrypt from "bcryptjs";
 
-export async function deleteUserService(userId) {
-    return prisma.$transaction(async (tx) => {
-        const id = Number(userId);
-        const user = await tx.user.findFirst({
-            where: {
-                id: id,
-                role: 'USER',
-                isActive: true
-            }
-        });
-        
-        if (!user) {
-            throw new Error("User not found or already disabled.");
-        }
-        
-        await tx.user.update({
-            where: { id: id },
-            data: { isActive: false }
-        });
-        
-        return { id: userId };
-    });
-}
-
-export async function createUserService({
-  name,
-  email,
-  password,
-  role = 'USER',
-  phone,
-  avatarUrl,
+export async function getUsersService({
+  search,
+  status,
+  role,
   city,
-  country,
-  bio
-}) {
-  return prisma.$transaction(async (tx) => {
+  skip = 0,
+  take = 10,
+} = {}) {
+  const filters = [];
+  const values = [];
 
-    const userExist = await tx.user.findUnique({
-      where: { email }
-    });
+  // Exclude admins and charity accounts
+  if (role && role !== "all") {
+    values.push(role);
+    filters.push(`u."role" = $${values.length}::"Role"`);
+  } else {
+    filters.push(`u."role" IN ('USER', 'VOLUNTEER')`);
+  }
 
-    if (userExist) {
-      throw new Error("Email already exists");
-    }
+  // Status filter
+  if (status === "active")    filters.push(`u."isActive" = true`);
+  if (status === "suspended") filters.push(`u."isActive" = false`);
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+  // City filter
+  if (city && city !== "all") {
+    values.push(city);
+    filters.push(`bp."city" = $${values.length}`);
+  }
 
-    const user = await tx.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-        role,
-        isActive: true
-      }
-    });
+  // tsvector search
+  let searchQuery = "";
+  if (search) {
+    values.push(search);
+    searchQuery = `AND u.search_vector @@ plainto_tsquery('english', $${values.length}::text)`;
+  }
 
-    // Create BaseProfile ONLY for normal users
-    if (role === 'USER') {
-      await tx.BaseProfile.create({
-        data: {
-          userId: user.id,
-          phone: phone || null,
-          avatarUrl: avatarUrl || null,
-          city: city || null,
-          country: country || null,
-          bio: bio || null
-        }
-      });
-    }
+  const whereClause = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
 
-    return user;
-  });
+  const query = `
+    SELECT
+      u.id,
+      u.name,
+      u.email,
+      u.role,
+      u."isActive",
+      u."createdAt",
+      u."lastLoginAt",
+      bp.phone,
+      bp."avatarUrl",
+      bp.city,
+      bp.country,
+      bp.bio,
+      ${search
+        ? `ts_rank(u.search_vector, plainto_tsquery('english', $${values.length})) as rank`
+        : `0 as rank`}
+    FROM "User" u
+    LEFT JOIN "BaseProfile" bp ON bp."userId" = u.id
+    ${whereClause}
+    ${search ? searchQuery : ""}
+    ORDER BY rank DESC, u."createdAt" DESC
+    LIMIT ${take} OFFSET ${skip}
+  `;
+
+  const countQuery = `
+    SELECT COUNT(*)
+    FROM "User" u
+    LEFT JOIN "BaseProfile" bp ON bp."userId" = u.id
+    ${whereClause}
+    ${search ? searchQuery : ""}
+  `;
+
+  const [rows, totalResult] = await prisma.$transaction([
+    prisma.$queryRawUnsafe(query, ...values),
+    prisma.$queryRawUnsafe(countQuery, ...values),
+  ]);
+
+  // Shape raw rows back into the nested structure the frontend expects
+  const users = rows.map((r) => ({
+    id:          r.id,
+    name:        r.name,
+    email:       r.email,
+    role:        r.role,
+    isActive:    r.isActive,
+    createdAt:   r.createdAt,
+    lastLoginAt: r.lastLoginAt,
+    baseProfile: {
+      phone:     r.phone,
+      avatarUrl: r.avatarUrl,
+      city:      r.city,
+      country:   r.country,
+      bio:       r.bio,
+    },
+  }));
+
+  return { users, total: Number(totalResult[0].count) };
 }
 
-
-export async function getUsersService() {
-  return prisma.user.findMany({
+// ── Get single user by id
+export async function getUserService(userId) {
+  const user = await prisma.user.findFirst({
     where: {
-      isActive: true,
-      role: 'USER'
+      id: Number(userId),
+      role: { in: ["USER", "VOLUNTEER"] },
     },
     select: {
       id: true,
@@ -90,104 +112,169 @@ export async function getUsersService() {
       role: true,
       isActive: true,
       createdAt: true,
-      profile: {
+      lastLoginAt: true,
+      baseProfile: {
         select: {
           phone: true,
           avatarUrl: true,
           city: true,
           country: true,
-          bio: true
-        }
-      }
+          bio: true,
+        },
+      },
+      volunteerProfile: {
+        select: {
+          isAvailable: true,
+          availabilityNote: true,
+          experience: true,
+          isVerified: true,
+          skills: { select: { skill: true } },
+          preferences: { select: { type: true, value: true } },
+        },
+      },
+      applications: {
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          message: true,
+          createdAt: true,
+          charityProject: {
+            select: {
+              id: true,
+              title: true,
+              status: true,
+              charity: { select: { name: true } },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!user) throw new Error("User not found.");
+  return user;
+}
+
+// ── Get distinct cities for filter dropdown
+export async function getUserCitiesService() {
+  const profiles = await prisma.baseProfile.findMany({
+    where: {
+      city: { not: null },
+      user: { role: { in: ["USER", "VOLUNTEER"] } },
+    },
+    select: { city: true },
+    distinct: ["city"],
+    orderBy: { city: "asc" },
+  });
+  return profiles.map((p) => p.city).filter(Boolean);
+}
+
+// ── Create user
+export async function createUserService({
+  name,
+  email,
+  password,
+  role = "USER",
+  phone,
+  avatarUrl,
+  city,
+  country,
+  bio,
+}) {
+  return prisma.$transaction(async (tx) => {
+    const userExist = await tx.user.findUnique({ where: { email } });
+    if (userExist) throw new Error("Email already exists");
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await tx.user.create({
+      data: { name, email, password: hashedPassword, role, isActive: true },
+    });
+
+    await tx.baseProfile.create({
+      data: {
+        userId:    user.id,
+        phone:     phone     || null,
+        avatarUrl: avatarUrl || null,
+        city:      city      || null,
+        country:   country   || null,
+        bio:       bio       || null,
+      },
+    });
+
+    if (role === "VOLUNTEER") {
+      await tx.volunteerProfile.create({
+        data: { userId: user.id },
+      });
     }
+
+    return user;
   });
 }
 
+// ── Update user
 export async function updateUserService(id, updateData) {
   const userId = Number(id);
 
   const user = await prisma.user.findFirst({
-    where: {
-      id: userId,
-      isActive: true
-    }
+    where: { id: userId, role: { in: ["USER", "VOLUNTEER"] } },
   });
+  if (!user) throw new Error("User not found or inactive.");
 
-  if (!user) {
-    throw new Error("User not found or inactive.");
-  }
-
-  // PREVENT EMAIL COLLISION
   if (updateData.email) {
-    const emailOwner = await prisma.user.findUnique({
-      where: { email: updateData.email }
-    });
-
-    if (emailOwner && emailOwner.id !== userId) {
-      throw new Error("Email already in use.");
-    }
+    const emailOwner = await prisma.user.findUnique({ where: { email: updateData.email } });
+    if (emailOwner && emailOwner.id !== userId) throw new Error("Email already in use.");
   }
 
-  // Account-level fields
-  const userFields = ['name', 'email', 'isActive'];
-  const userData = {};
+  const userFields    = ["name", "email", "isActive"];
+  const profileFields = ["phone", "avatarUrl", "city", "country", "bio"];
+  const userData      = {};
+  const profileData   = {};
 
-  // Profile-level fields
-  const profileFields = ['phone', 'avatarUrl', 'city', 'country', 'bio'];
-  const profileData = {};
+  for (const f of userFields)    if (updateData[f] !== undefined) userData[f]    = updateData[f];
+  for (const f of profileFields) if (updateData[f] !== undefined) profileData[f] = updateData[f];
 
-  for (const field of userFields) {
-    if (updateData[field] !== undefined) {
-      userData[field] = updateData[field];
-    }
-  }
-
-  for (const field of profileFields) {
-    if (updateData[field] !== undefined) {
-      profileData[field] = updateData[field];
-    }
-  }
-
-  if (
-    Object.keys(userData).length === 0 &&
-    Object.keys(profileData).length === 0
-  ) {
+  if (!Object.keys(userData).length && !Object.keys(profileData).length) {
     throw new Error("No valid fields provided for update.");
   }
 
   return prisma.$transaction(async (tx) => {
-
-    if (Object.keys(userData).length > 0) {
-      await tx.user.update({
-        where: { id: userId },
-        data: userData
-      });
+    if (Object.keys(userData).length) {
+      await tx.user.update({ where: { id: userId }, data: userData });
     }
 
-    if (Object.keys(profileData).length > 0) {
-      await tx.BaseProfile.upsert({
-        where: { userId },
+    if (Object.keys(profileData).length) {
+      await tx.baseProfile.upsert({
+        where:  { userId },
         update: profileData,
-        create: {
-          userId,
-          ...profileData
-        }
+        create: { userId, ...profileData },
       });
     }
 
     return tx.user.findUnique({
       where: { id: userId },
-      include: {
-        profile: {
-          select: {
-            phone: true,
-            avatarUrl: true,
-            city: true,
-            country: true,
-            bio: true
-          }
-        }
-      }
+      select: {
+        id: true, name: true, email: true, role: true,
+        isActive: true, createdAt: true, lastLoginAt: true,
+        baseProfile: {
+          select: { phone: true, avatarUrl: true, city: true, country: true, bio: true },
+        },
+      },
     });
+  });
+}
+
+// ── Delete user (soft delete)
+export async function deleteUserService(userId) {
+  return prisma.$transaction(async (tx) => {
+    const id = Number(userId);
+    const user = await tx.user.findFirst({
+      where: { id, role: { in: ["USER", "VOLUNTEER"] }, isActive: true },
+    });
+
+    if (!user) throw new Error("User not found or already disabled.");
+
+    await tx.user.update({ where: { id }, data: { isActive: false } });
+    return { id: userId };
   });
 }

@@ -40,6 +40,9 @@ export const updateCharitySchema = Joi.object({
   city: Joi.string().max(100).optional().allow(null, ""),
 
   category: Joi.string().max(100).optional().allow(null, ""),
+
+  isVerified: Joi.boolean().optional(),
+
 }).min(1);
 
 export const charityIdParamSchema = Joi.object({

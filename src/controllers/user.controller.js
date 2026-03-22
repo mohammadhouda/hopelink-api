@@ -1,17 +1,44 @@
-import {getUsersService, updateUserService, deleteUserService, createUserService} from "../services/user.service.js";
+import {getUsersService, getUserService, getUserCitiesService, updateUserService, deleteUserService, createUserService} from "../services/user.service.js";
 import { success, failure } from "../utils/response.js";
 
 export async function getUsersController(req, res) {
-    try {
-        const users = await getUsersService();
-        return success(
-            res,
-            users,
-            users.length ? "Users fetched successfully." : "No users found."
-            );
-    } catch (error) {
-        return failure(res, error.message);
-    }
+  try {
+    const { search, status, role, city, page = 1, limit = 10 } = req.query;
+ 
+    const { users, total } = await getUsersService({
+      search,
+      status,
+      role,
+      city,
+      skip: (Number(page) - 1) * Number(limit),
+      take: Number(limit),
+    });
+ 
+    if (total === 0) return failure(res, "No users found.", 200);
+    return success(res, { items: users, total }, "Users fetched successfully.", 200);
+  } catch (error) {
+    return failure(res, error.message);
+  }
+}
+
+export async function getUserCitiesController(req, res) {
+  try {
+    const cities = await getUserCitiesService();
+    return success(res, cities, "Cities fetched successfully.", 200);
+  } catch (error) {
+    return failure(res, error.message);
+  }
+}
+
+export async function getUserController(req, res) {
+  try {
+    const { userId } = req.params;
+    const user = await getUserService(userId);
+    return success(res, user, "User fetched successfully.", 200);
+  } catch (error) {
+    const status = error.message === "User not found." ? 404 : 500;
+    return failure(res, error.message, status);
+  }
 }
 
 export async function updateUserController(req, res) {

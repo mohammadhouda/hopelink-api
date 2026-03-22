@@ -141,7 +141,7 @@ export async function updateCharityService(id, data) {
     "name",
     "email",
     "isActive",
-    "isVerified", // ← added so verify/revoke works
+    "isVerified",
     "description",
     "logoUrl",
     "phone",
