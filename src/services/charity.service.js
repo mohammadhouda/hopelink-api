@@ -39,7 +39,7 @@ export async function getCharitiesService({
   if (search) {
     values.push(search);
     searchQuery = `
-      AND c.search_vector @@ plainto_tsquery('english', $${values.length}::text)
+      AND u.search_vector @@ plainto_tsquery('english', $${values.length}::text)
     `;
   }
 
@@ -64,7 +64,7 @@ export async function getCharitiesService({
       u."isActive",
       ${
         search
-          ? `ts_rank(c.search_vector, plainto_tsquery('english', $${values.length})) as rank`
+          ? `ts_rank(u.search_vector, plainto_tsquery('english', $${values.length})) as rank`
           : `0 as rank`
       }
     FROM "CharityAccount" c
@@ -92,6 +92,37 @@ export async function getCharitiesService({
     charities,
     total: Number(totalResult[0].count),
   };
+}
+
+export async function getCharityService(userId) {
+  const charity = await prisma.charityAccount.findUnique({
+    where: { userId: Number(userId) },
+    include: {
+      user: {
+        select: {
+          id: true,
+          email: true,
+          isActive: true,
+          lastLoginAt: true,
+          createdAt: true,
+        },
+      },
+      charityProjects: {
+        orderBy: { createdAt: "desc" },
+        include: {
+          _count: {
+            select: { applications: true },
+          },
+        },
+      },
+    },
+  });
+
+  if (!charity) {
+    throw new Error("Charity not found.");
+  }
+
+  return charity;
 }
 
 export async function createCharitiesService(data) {
@@ -129,10 +160,7 @@ export async function createCharitiesService(data) {
       },
     });
 
-    return {
-      user,
-      charity,
-    };
+    return { user, charity };
   });
 }
 
@@ -166,25 +194,18 @@ export async function updateCharityService(id, data) {
   const userData = {};
   const charityData = {};
 
-  if (updateData.name) userData.name = updateData.name;
-  if (updateData.email) userData.email = updateData.email;
-  if (typeof updateData.isActive === "boolean")
-    userData.isActive = updateData.isActive;
+  if (updateData.name)                          userData.name        = updateData.name;
+  if (updateData.email)                         userData.email       = updateData.email;
+  if (typeof updateData.isActive === "boolean") userData.isActive    = updateData.isActive;
 
-  if (updateData.description !== undefined)
-    charityData.description = updateData.description;
-  if (updateData.logoUrl !== undefined)
-    charityData.logoUrl = updateData.logoUrl;
-  if (updateData.phone !== undefined) charityData.phone = updateData.phone;
-  if (updateData.address !== undefined)
-    charityData.address = updateData.address;
-  if (updateData.websiteUrl !== undefined)
-    charityData.websiteUrl = updateData.websiteUrl;
-  if (updateData.city !== undefined) charityData.city = updateData.city;
-  if (updateData.category !== undefined)
-    charityData.category = updateData.category;
-  if (typeof updateData.isVerified === "boolean")
-    charityData.isVerified = updateData.isVerified;
+  if (updateData.description !== undefined)     charityData.description = updateData.description;
+  if (updateData.logoUrl     !== undefined)     charityData.logoUrl     = updateData.logoUrl;
+  if (updateData.phone       !== undefined)     charityData.phone       = updateData.phone;
+  if (updateData.address     !== undefined)     charityData.address     = updateData.address;
+  if (updateData.websiteUrl  !== undefined)     charityData.websiteUrl  = updateData.websiteUrl;
+  if (updateData.city        !== undefined)     charityData.city        = updateData.city;
+  if (updateData.category    !== undefined)     charityData.category    = updateData.category;
+  if (typeof updateData.isVerified === "boolean") charityData.isVerified = updateData.isVerified;
 
   return await prisma.$transaction(async (tx) => {
     if (Object.keys(userData).length > 0) {
@@ -244,35 +265,4 @@ export async function deleteCharityService(id) {
       userId,
     };
   });
-}
-
-export async function getCharityService(userId) {
-  const charity = await prisma.charityAccount.findUnique({
-    where: { userId: Number(userId) },
-    include: {
-      user: {
-        select: {
-          id: true,
-          email: true,
-          isActive: true,
-          lastLoginAt: true,
-          createdAt: true,
-        },
-      },
-      charityProjects: {
-        orderBy: { createdAt: "desc" },
-        include: {
-          _count: {
-            select: { applications: true },
-          },
-        },
-      },
-    },
-  });
-
-  if (!charity) {
-    throw new Error("Charity not found.");
-  }
-
-  return charity;
 }
