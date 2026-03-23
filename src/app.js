@@ -4,6 +4,8 @@ import authRoutes from "./routes/auth.routes.js";
 import profileRoutes from "./routes/profile.routes.js";
 import charityRoutes from "./routes/charity.routes.js";
 import userRoutes from "./routes/user.route.js";
+import requestRoutes from "./routes/request.routes.js";
+import uploadRouter from "./routes/upload.routes.js";
 import authMiddleware from "./middlewares/auth.js";
 import restrictTo from "./middlewares/restrictTo.js";
 import cookieParser from "cookie-parser";
@@ -31,6 +33,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/admin", authMiddleware, restrictTo("ADMIN"), profileRoutes);
 app.use("/api/charities", authMiddleware, restrictTo("ADMIN"), charityRoutes);
 app.use("/api/users", authMiddleware, restrictTo("ADMIN"), userRoutes);
+app.use("/api/requests", authMiddleware, restrictTo("ADMIN"), requestRoutes);
+app.use("/api/upload", uploadRouter);
 
 export default app;
 
