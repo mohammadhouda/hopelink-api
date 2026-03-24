@@ -7,38 +7,29 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// =======================
-// Users and Roles
-// =======================
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  password  String
-  role      Role     @default(USER)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-
-  // Security
-  lastLoginAt       DateTime?
-  lastLoginIp       String?
-  passwordChangedAt DateTime?
-
-  // Role-based profiles
-  baseProfile      BaseProfile?
-  volunteerProfile VolunteerProfile?
-  charityAccount   CharityAccount?
-
-  // Relations
-  applications  Application[]
-  refreshTokens RefreshToken[]
+  id                   Int                      @id @default(autoincrement())
+  name                 String
+  email                String                   @unique
+  password             String
+  createdAt            DateTime                 @default(now())
+  role                 Role                     @default(USER)
+  isActive             Boolean                  @default(true)
+  lastLoginAt          DateTime?
+  lastLoginIp          String?
+  passwordChangedAt    DateTime?
+  search_vector        Unsupported("tsvector")?
+  lockout              AccountLockout?
+  applications         Application[]
+  baseProfile          BaseProfile?
+  charityAccount       CharityAccount?
+  refreshTokens        RefreshToken[]
   verificationRequests VerificationRequest[]
-  lockout       AccountLockout?
+  volunteerProfile     VolunteerProfile?
+  reviewedRegistrations RegistrationRequest[] @relation("ReviewedByUser")
+  reviewedVerifications VerificationRequest[] @relation("ReviewedByUser")
 }
 
-// =======================
-// Profiles
-// =======================
 model BaseProfile {
   id        Int      @id @default(autoincrement())
   phone     String?
@@ -46,133 +37,102 @@ model BaseProfile {
   city      String?
   country   String?
   bio       String?
-
-  userId Int  @unique
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  userId    Int      @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model VolunteerProfile {
-  id Int @id @default(autoincrement())
-
-  userId Int  @unique
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  isAvailable      Boolean @default(true)
+  id               Int                   @id @default(autoincrement())
+  userId           Int                   @unique
+  isAvailable      Boolean               @default(true)
   availabilityNote String?
   experience       String?
-  isVerified       Boolean @default(false)
-
-  skills      VolunteerSkill[]
-  preferences VolunteerPreference[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  isVerified       Boolean               @default(false)
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  preferences      VolunteerPreference[]
+  user             User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skills           VolunteerSkill[]
 }
 
 model VolunteerSkill {
-  id          Int @id @default(autoincrement())
+  id          Int              @id @default(autoincrement())
   volunteerId Int
   skill       String
-
-  volunteer VolunteerProfile @relation(fields: [volunteerId], references: [id], onDelete: Cascade)
+  volunteer   VolunteerProfile @relation(fields: [volunteerId], references: [id], onDelete: Cascade)
 
   @@index([skill])
 }
 
 model VolunteerPreference {
-  id          Int @id @default(autoincrement())
+  id          Int              @id @default(autoincrement())
   volunteerId Int
   type        PreferenceType
   value       String
-
-  volunteer VolunteerProfile @relation(fields: [volunteerId], references: [id], onDelete: Cascade)
+  volunteer   VolunteerProfile @relation(fields: [volunteerId], references: [id], onDelete: Cascade)
 
   @@index([type, value])
 }
 
-enum PreferenceType {
-  CITY
-  CATEGORY
-}
-
-// =======================
-// Charity Accounts & Projects
-// =======================
 model CharityAccount {
-  id          Int      @id @default(autoincrement())
-  name        String
-  description String?
-  logoUrl     String?
-  websiteUrl  String?
-  phone       String?
-  address     String?
-  city        String?
-  category    Category?
-
-  isVerified Boolean @default(false)
-
-  userId    Int  @unique
-  createdAt DateTime @default(now())
-
-  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id              Int              @id @default(autoincrement())
+  name            String
+  description     String?
+  logoUrl         String?
+  websiteUrl      String?
+  phone           String?
+  address         String?
+  city            String?
+  isVerified      Boolean          @default(false)
+  userId          Int              @unique
+  createdAt       DateTime         @default(now())
+  category        Category?
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   charityProjects CharityProject[]
 }
 
 model CharityProject {
-  id          Int           @id @default(autoincrement())
-  title       String
-  description String
-  category    Category?
-  status      ProjectStatus @default(ACTIVE)
-  createdAt   DateTime      @default(now())
-
-  charityId Int
-  charity   CharityAccount @relation(fields: [charityId], references: [id], onDelete: Cascade)
-
+  id           Int            @id @default(autoincrement())
+  title        String
+  description  String
+  status       ProjectStatus  @default(ACTIVE)
+  createdAt    DateTime       @default(now())
+  charityId    Int
+  category     Category?
   applications Application[]
+  charity      CharityAccount @relation(fields: [charityId], references: [id], onDelete: Cascade)
 
   @@index([charityId])
   @@index([status])
 }
 
-// =======================
-// Applications
-// =======================
 model Application {
-  id        Int      @id @default(autoincrement())
-  message   String?
-  createdAt DateTime @default(now())
-
+  id               Int            @id @default(autoincrement())
+  message          String?
+  createdAt        DateTime       @default(now())
   userId           Int
   charityProjectId Int
-
-  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  charityProject CharityProject @relation(fields: [charityProjectId], references: [id], onDelete: Cascade)
+  charityProject   CharityProject @relation(fields: [charityProjectId], references: [id], onDelete: Cascade)
+  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, charityProjectId])
   @@index([charityProjectId])
 }
 
-// =======================
-// Authentication & Security
-// =======================
 model RefreshToken {
-  id        String   @id @default(uuid())
-  token     String   @unique
-  userId    Int
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-
-  ipAddress  String?
-  userAgent  String?
+  id         String   @id @default(uuid())
+  token      String   @unique
+  userId     Int
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
   deviceInfo String?
   family     String?
-  isRevoked  Boolean @default(false)
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ipAddress  String?
+  isRevoked  Boolean  @default(false)
+  userAgent  String?
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([expiresAt])
@@ -200,50 +160,44 @@ model AccountLockout {
   attempts     Int      @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model RegistrationRequest {
   id         Int           @id @default(autoincrement())
   status     RequestStatus @default(PENDING)
-
-  // Submitted info
   name       String
   email      String
   phone      String?
   city       String?
   category   Category?
   message    String?
-
-  // Admin action
   reviewNote String?
   reviewedAt DateTime?
   reviewedBy Int?
-
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  reviewer   User? @relation("ReviewedByUser", fields: [reviewedBy], references: [id])
 }
 
 model VerificationRequest {
   id         Int           @id @default(autoincrement())
   status     RequestStatus @default(PENDING)
-
-  // Linked to existing charity account
   userId     Int
-  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-
   documents  String[]
-
   message    String?
-
-  // Admin action
   reviewNote String?
   reviewedAt DateTime?
   reviewedBy Int?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviewer   User? @relation("ReviewedByUser", fields: [reviewedBy], references: [id])
+}
 
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+enum PreferenceType {
+  CITY
+  CATEGORY
 }
 
 enum RequestStatus {
@@ -252,9 +206,6 @@ enum RequestStatus {
   DECLINED
 }
 
-// =======================
-// Enums
-// =======================
 enum Role {
   USER
   ADMIN
