@@ -8,26 +8,30 @@ datasource db {
 }
 
 model User {
-  id                   Int                      @id @default(autoincrement())
-  name                 String
-  email                String                   @unique
-  password             String
-  createdAt            DateTime                 @default(now())
-  role                 Role                     @default(USER)
-  isActive             Boolean                  @default(true)
-  lastLoginAt          DateTime?
-  lastLoginIp          String?
-  passwordChangedAt    DateTime?
-  search_vector        Unsupported("tsvector")?
-  lockout              AccountLockout?
-  applications         Application[]
-  baseProfile          BaseProfile?
-  charityAccount       CharityAccount?
-  refreshTokens        RefreshToken[]
-  verificationRequests VerificationRequest[]
-  volunteerProfile     VolunteerProfile?
-  reviewedRegistrations RegistrationRequest[] @relation("ReviewedByUser")
-  reviewedVerifications VerificationRequest[] @relation("ReviewedByUser")
+  id                    Int                      @id @default(autoincrement())
+  name                  String
+  email                 String                   @unique
+  password              String
+  createdAt             DateTime                 @default(now())
+  role                  Role                     @default(USER)
+  isActive              Boolean                  @default(true)
+  lastLoginAt           DateTime?
+  lastLoginIp           String?
+  passwordChangedAt     DateTime?
+  search_vector         Unsupported("tsvector")?
+  lockout               AccountLockout?
+  ApiKey                ApiKey[]
+  applications          Application[]
+  AuditLog              AuditLog[]
+  baseProfile           BaseProfile?
+  charityAccount        CharityAccount?
+  refreshTokens         RefreshToken[]
+  reviewedRegistrations RegistrationRequest[]    @relation("ReviewedByUser")
+  reviewedVerifications VerificationRequest[]    @relation("ReviewedByUser")
+  verificationRequests  VerificationRequest[]
+  volunteerProfile      VolunteerProfile?
+
+  @@index([search_vector], map: "user_search_vector_idx", type: Gin)
 }
 
 model BaseProfile {
@@ -77,7 +81,7 @@ model VolunteerPreference {
 }
 
 model CharityAccount {
-  id              Int              @id @default(autoincrement())
+  id              Int                      @id @default(autoincrement())
   name            String
   description     String?
   logoUrl         String?
@@ -85,12 +89,15 @@ model CharityAccount {
   phone           String?
   address         String?
   city            String?
-  isVerified      Boolean          @default(false)
-  userId          Int              @unique
-  createdAt       DateTime         @default(now())
+  isVerified      Boolean                  @default(false)
+  userId          Int                      @unique
+  createdAt       DateTime                 @default(now())
   category        Category?
-  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  search_vector   Unsupported("tsvector")?
+  user            User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
   charityProjects CharityProject[]
+
+  @@index([search_vector], map: "idx_charity_search", type: Gin)
 }
 
 model CharityProject {
@@ -177,7 +184,7 @@ model RegistrationRequest {
   reviewedBy Int?
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @updatedAt
-  reviewer   User? @relation("ReviewedByUser", fields: [reviewedBy], references: [id])
+  reviewer   User?         @relation("ReviewedByUser", fields: [reviewedBy], references: [id])
 }
 
 model VerificationRequest {
@@ -191,8 +198,86 @@ model VerificationRequest {
   reviewedBy Int?
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @updatedAt
+  reviewer   User?         @relation("ReviewedByUser", fields: [reviewedBy], references: [id])
   user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  reviewer   User? @relation("ReviewedByUser", fields: [reviewedBy], references: [id])
+}
+
+model Integration {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  description String    @default("")
+  icon        String    @default("")
+  status      String    @default("disconnected")
+  config      Json      @default("{}")
+  connectedAt DateTime?
+  updatedAt   DateTime  @default(now())
+}
+
+model ApiKey {
+  id          Int       @id @default(autoincrement())
+  name        String
+  keyHash     String    @unique
+  prefix      String
+  permissions String[]  @default([])
+  expiresAt   DateTime?
+  lastUsedAt  DateTime?
+  createdById Int
+  createdAt   DateTime  @default(now())
+  isRevoked   Boolean   @default(false)
+  User        User      @relation(fields: [createdById], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([createdById])
+}
+
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  action     String
+  target     String
+  targetType String
+  details    String   @default("")
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+  User       User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([createdAt])
+}
+
+model DynamicRole {
+  id                    Int                     @id @default(autoincrement())
+  name                  String                  @unique
+  description           String                  @default("")
+  isSystem              Boolean                 @default(false)
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @default(now())
+  DynamicRolePermission DynamicRolePermission[]
+}
+
+model DynamicRolePermission {
+  id          Int         @id @default(autoincrement())
+  roleId      Int
+  permission  String
+  DynamicRole DynamicRole @relation(fields: [roleId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([roleId, permission])
+}
+
+model EmailTemplate {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique
+  name        String
+  description String   @default("")
+  subject     String
+  body        String
+  variables   String[] @default([])
+  updatedAt   DateTime @default(now())
+}
+
+model PlatformSetting {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @default(now())
 }
 
 enum PreferenceType {

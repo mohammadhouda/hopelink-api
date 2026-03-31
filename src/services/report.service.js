@@ -12,6 +12,15 @@ function parseDateRange(from, to) {
   return Object.keys(where).length > 0 ? where : undefined;
 }
 
+function buildDateFilters(dateRange) {
+  const fragments = [];
+  if (dateRange?.gte)
+    fragments.push(Prisma.sql`AND "createdAt" >= ${dateRange.gte}`);
+  if (dateRange?.lte)
+    fragments.push(Prisma.sql`AND "createdAt" <= ${dateRange.lte}`);
+  return fragments.length > 0 ? Prisma.join(fragments, " ") : Prisma.empty;
+}
+
 export const getRegistrationReport = async (query) => {
   const { from, to, status, category, city } = query;
 
@@ -21,6 +30,8 @@ export const getRegistrationReport = async (query) => {
   if (status && status !== "all") where.status = status;
   if (category && category !== "all") where.category = category;
   if (city && city !== "all") where.city = city;
+
+  const dateFilters = buildDateFilters(dateRange);
 
   const [
     totalRequests,
@@ -51,9 +62,7 @@ export const getRegistrationReport = async (query) => {
         COUNT(*) FILTER (WHERE status = 'DECLINED')::int as declined,
         COUNT(*) FILTER (WHERE status = 'PENDING')::int as pending
       FROM "RegistrationRequest"
-      WHERE 1=1
-        ${dateRange?.gte ? prisma.$queryRaw`AND "createdAt" >= ${dateRange.gte}` : prisma.$queryRaw``}
-        ${dateRange?.lte ? prisma.$queryRaw`AND "createdAt" <= ${dateRange.lte}` : prisma.$queryRaw``}
+      WHERE 1=1 ${dateFilters}
       GROUP BY DATE_TRUNC('month', "createdAt"), label
       ORDER BY date ASC
     `,
@@ -63,9 +72,7 @@ export const getRegistrationReport = async (query) => {
       SELECT 
         ROUND(AVG(EXTRACT(EPOCH FROM ("reviewedAt" - "createdAt")) / 3600)::numeric, 1) as avg_hours
       FROM "RegistrationRequest"
-      WHERE "reviewedAt" IS NOT NULL
-        ${dateRange?.gte ? prisma.$queryRaw`AND "createdAt" >= ${dateRange.gte}` : prisma.$queryRaw``}
-        ${dateRange?.lte ? prisma.$queryRaw`AND "createdAt" <= ${dateRange.lte}` : prisma.$queryRaw``}
+      WHERE "reviewedAt" IS NOT NULL ${dateFilters}
     `,
 
     // By category
@@ -108,7 +115,9 @@ export const getRegistrationReport = async (query) => {
   ]);
 
   const statusMap = {};
-  byStatus.forEach((s) => { statusMap[s.status] = s._count.id; });
+  byStatus.forEach((s) => {
+    statusMap[s.status] = s._count.id;
+  });
 
   return {
     summary: {
@@ -116,18 +125,21 @@ export const getRegistrationReport = async (query) => {
       approved: statusMap.APPROVED || 0,
       declined: statusMap.DECLINED || 0,
       pending: statusMap.PENDING || 0,
-      approvalRate: totalRequests > 0
-        ? Math.round(((statusMap.APPROVED || 0) / totalRequests) * 100)
-        : 0,
+      approvalRate:
+        totalRequests > 0
+          ? Math.round(((statusMap.APPROVED || 0) / totalRequests) * 100)
+          : 0,
       avgProcessingHours: avgProcessingTime[0]?.avg_hours ?? null,
     },
     byMonth,
-    byCategory: byCategory.map((c) => ({ category: c.category, count: c._count.id })),
+    byCategory: byCategory.map((c) => ({
+      category: c.category,
+      count: c._count.id,
+    })),
     byCity: byCity.map((c) => ({ city: c.city, count: c._count.id })),
     requests: recentRequests,
   };
 };
-
 
 export const getNgoReport = async (query) => {
   const { from, to, category, city, verified } = query;
@@ -195,9 +207,13 @@ export const getNgoReport = async (query) => {
       total: totalNgos,
       verified: verifiedCount,
       unverified: unverifiedCount,
-      verificationRate: totalNgos > 0 ? Math.round((verifiedCount / totalNgos) * 100) : 0,
+      verificationRate:
+        totalNgos > 0 ? Math.round((verifiedCount / totalNgos) * 100) : 0,
     },
-    byCategory: byCategory.map((c) => ({ category: c.category, count: c._count.id })),
+    byCategory: byCategory.map((c) => ({
+      category: c.category,
+      count: c._count.id,
+    })),
     byCity: byCity.map((c) => ({ city: c.city, count: c._count.id })),
     ngos: ngoList.map((n) => ({
       id: n.id,
@@ -218,6 +234,8 @@ export const getUserReport = async (query) => {
   const dateRange = parseDateRange(from, to);
   const where = {};
   if (dateRange) where.createdAt = dateRange;
+
+  const dateFilters = buildDateFilters(dateRange);
 
   const [
     totalUsers,
@@ -246,9 +264,7 @@ export const getUserReport = async (query) => {
         DATE_TRUNC('month', "createdAt") as date,
         COUNT(*)::int as count
       FROM "User"
-      WHERE 1=1
-        ${dateRange?.gte ? prisma.$queryRaw`AND "createdAt" >= ${dateRange.gte}` : prisma.$queryRaw``}
-        ${dateRange?.lte ? prisma.$queryRaw`AND "createdAt" <= ${dateRange.lte}` : prisma.$queryRaw``}
+      WHERE 1=1 ${dateFilters}
       GROUP BY DATE_TRUNC('month', "createdAt"), label
       ORDER BY date ASC
     `,
@@ -281,7 +297,6 @@ export const getUserReport = async (query) => {
   };
 };
 
-
 export const getProjectReport = async (query) => {
   const { from, to, status, category } = query;
 
@@ -290,6 +305,8 @@ export const getProjectReport = async (query) => {
   if (dateRange) where.createdAt = dateRange;
   if (status && status !== "all") where.status = status;
   if (category && category !== "all") where.category = category;
+
+  const dateFilters = buildDateFilters(dateRange);
 
   const [
     totalProjects,
@@ -320,9 +337,7 @@ export const getProjectReport = async (query) => {
         DATE_TRUNC('month', "createdAt") as date,
         COUNT(*)::int as count
       FROM "CharityProject"
-      WHERE 1=1
-        ${dateRange?.gte ? prisma.$queryRaw`AND "createdAt" >= ${dateRange.gte}` : prisma.$queryRaw``}
-        ${dateRange?.lte ? prisma.$queryRaw`AND "createdAt" <= ${dateRange.lte}` : prisma.$queryRaw``}
+      WHERE 1=1 ${dateFilters}
       GROUP BY DATE_TRUNC('month', "createdAt"), label
       ORDER BY date ASC
     `,
@@ -359,7 +374,9 @@ export const getProjectReport = async (query) => {
   ]);
 
   const statusMap = {};
-  byStatus.forEach((s) => { statusMap[s.status] = s._count.id; });
+  byStatus.forEach((s) => {
+    statusMap[s.status] = s._count.id;
+  });
 
   return {
     summary: {
@@ -368,7 +385,10 @@ export const getProjectReport = async (query) => {
       paused: statusMap.PAUSED || 0,
       closed: statusMap.CLOSED || 0,
     },
-    byCategory: byCategory.map((c) => ({ category: c.category, count: c._count.id })),
+    byCategory: byCategory.map((c) => ({
+      category: c.category,
+      count: c._count.id,
+    })),
     byStatus: byStatus.map((s) => ({ status: s.status, count: s._count.id })),
     projectsByMonth,
     topCharities: topCharities.map((c) => ({
@@ -386,7 +406,6 @@ export const getProjectReport = async (query) => {
     })),
   };
 };
-
 
 export const getFilterOptions = async () => {
   const [categories, cities] = await Promise.all([
