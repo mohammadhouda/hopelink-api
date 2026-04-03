@@ -1,4 +1,5 @@
 import prisma from "../config/prisma.js";
+import { Prisma } from "@prisma/client";
 
 // Helper: parse date range from query params
 function parseDateRange(from, to) {

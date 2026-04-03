@@ -4,51 +4,45 @@ import path from "path";
 
 const BUCKETS = {
   documents: "documents",
-  logos:     "logos",
+  logos: "logos",
 };
 
 // Allowed MIME types per bucket
 const ALLOWED_TYPES = {
-  documents: [
-    "application/pdf",
-    "image/jpeg",
-    "image/png",
-    "image/webp",
-  ],
-  logos: [
-    "image/jpeg",
-    "image/png",
-    "image/webp",
-    "image/svg+xml",
-  ],
+  documents: ["application/pdf", "image/jpeg", "image/png", "image/webp"],
+  logos: ["image/jpeg", "image/png", "image/webp", "image/svg+xml"],
 };
 
 const MAX_SIZE_MB = {
   documents: 10,
-  logos:     5,
+  logos: 5,
 };
 
 // ── Upload a single file
 export async function uploadFileService(file, bucket = "documents") {
   if (!BUCKETS[bucket]) {
-    throw new Error(`Invalid bucket. Allowed: ${Object.keys(BUCKETS).join(", ")}`);
+    throw new Error(
+      `Invalid bucket. Allowed: ${Object.keys(BUCKETS).join(", ")}`,
+    );
   }
 
   // Validate MIME type
   if (!ALLOWED_TYPES[bucket].includes(file.mimetype)) {
     throw new Error(
-      `Invalid file type "${file.mimetype}". Allowed: ${ALLOWED_TYPES[bucket].join(", ")}`
+      `Invalid file type "${file.mimetype}". Allowed: ${ALLOWED_TYPES[bucket].join(", ")}`,
     );
   }
 
   // Validate file size
   const maxBytes = MAX_SIZE_MB[bucket] * 1024 * 1024;
   if (file.size > maxBytes) {
-    throw new Error(`File too large. Maximum size is ${MAX_SIZE_MB[bucket]}MB.`);
+    throw new Error(
+      `File too large. Maximum size is ${MAX_SIZE_MB[bucket]}MB.`,
+    );
   }
 
   // unique file path: bucket/uuid.ext
-  const ext      = path.extname(file.originalname).toLowerCase();
+  const ext = path.extname(file.originalname).toLowerCase();
   const filename = `${uuidv4()}${ext}`;
   const filePath = filename;
 
@@ -56,7 +50,7 @@ export async function uploadFileService(file, bucket = "documents") {
     .from(BUCKETS[bucket])
     .upload(filePath, file.buffer, {
       contentType: file.mimetype,
-      upsert:      false,
+      upsert: false,
     });
 
   if (error) throw new Error(`Upload failed: ${error.message}`);
@@ -67,10 +61,10 @@ export async function uploadFileService(file, bucket = "documents") {
     .getPublicUrl(filePath);
 
   return {
-    url:      data.publicUrl,
-    filename: file.originalname,
+    url: data.publicUrl,
+    filename: file.originalname, // example
     bucket,
-    path:     filePath,
+    path: filePath,
   };
 }
 
@@ -85,14 +79,17 @@ export async function uploadFilesService(files, bucket = "documents") {
   }
 
   const results = await Promise.all(
-    files.map((file) => uploadFileService(file, bucket))
+    files.map((file) => uploadFileService(file, bucket)),
   );
 
   return results;
 }
 
 // ── Delete a file
-export async function deleteFileService(filePath, bucket = "documents") {
+export default async function deleteFileService(
+  filePath,
+  bucket = "documents",
+) {
   const { error } = await supabase.storage
     .from(BUCKETS[bucket])
     .remove([filePath]);

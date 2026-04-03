@@ -1,4 +1,7 @@
-import { uploadFileService, uploadFilesService } from "../services/upload.service.js";
+import {
+  uploadFileService,
+  uploadFilesService,
+} from "../services/upload.service.js";
 import { success, failure } from "../utils/response.js";
 
 // POST /api/upload/single?bucket=documents
@@ -27,7 +30,12 @@ export async function uploadMultipleController(req, res) {
     const bucket = req.query.bucket || "documents";
     const results = await uploadFilesService(req.files, bucket);
 
-    return success(res, results, `${results.length} file(s) uploaded successfully.`, 201);
+    return success(
+      res,
+      results,
+      `${results.length} file(s) uploaded successfully.`,
+      201,
+    );
   } catch (error) {
     return failure(res, error.message);
   }

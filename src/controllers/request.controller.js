@@ -11,6 +11,7 @@ import {
   declineVerificationRequestService,
 } from "../services/request.service.js";
 import { success, failure } from "../utils/response.js";
+import { broadcastToAdmins } from "../services/notification.service.js";
 
 // ── Registration Requests ─────────────────────────────────────────────────────
 
@@ -23,8 +24,14 @@ export async function getRegistrationRequestsController(req, res) {
       take: Number(limit),
     });
 
-    if (total === 0) return failure(res, "No registration requests found.", 200);
-    return success(res, { items, total }, "Registration requests fetched.", 200);
+    if (total === 0)
+      return failure(res, "No registration requests found.", 200);
+    return success(
+      res,
+      { items, total },
+      "Registration requests fetched.",
+      200,
+    );
   } catch (error) {
     return failure(res, error.message);
   }
@@ -44,7 +51,22 @@ export async function getRegistrationRequestController(req, res) {
 export async function createRegistrationRequestController(req, res) {
   try {
     const { name, email, phone, city, category, message } = req.body;
-    const request = await createRegistrationRequestService({ name, email, phone, city, category, message });
+    const request = await createRegistrationRequestService({
+      name,
+      email,
+      phone,
+      city,
+      category,
+      message,
+    });
+
+    await broadcastToAdmins({
+      title: "New Registration Request",
+      message: `${name} has submitted a registration request.`,
+      type: "info",
+      link: "/requests",
+    });
+
     return success(res, request, "Registration request submitted.", 201);
   } catch (error) {
     return failure(res, error.message);
@@ -60,7 +82,20 @@ export async function approveRegistrationRequestController(req, res) {
     if (!adminId) throw new Error("Admin authentication required.");
 
     const result = await approveRegistrationRequestService(id, adminId);
-    return success(res, result, "Registration request approved. Charity account created.", 200);
+
+    await broadcastToAdmins({
+      title: "Registration Request Approved",
+      message: `Registration request #${id} has been approved.`,
+      type: "success",
+      link: "/requests",
+    });
+
+    return success(
+      res,
+      result,
+      "Registration request approved. Charity account created.",
+      200,
+    );
   } catch (error) {
     return failure(res, error.message);
   }
@@ -74,7 +109,19 @@ export async function declineRegistrationRequestController(req, res) {
 
     if (!adminId) throw new Error("Admin authentication required.");
 
-    const result = await declineRegistrationRequestService(id, adminId, reviewNote);
+    const result = await declineRegistrationRequestService(
+      id,
+      adminId,
+      reviewNote,
+    );
+
+    await broadcastToAdmins({
+      title: "Registration Request Declined",
+      message: `Registration request #${id} has been declined.`,
+      type: "error",
+      link: "/requests",
+    });
+
     return success(res, result, "Registration request declined.", 200);
   } catch (error) {
     return failure(res, error.message);
@@ -92,8 +139,14 @@ export async function getVerificationRequestsController(req, res) {
       take: Number(limit),
     });
 
-    if (total === 0) return failure(res, "No verification requests found.", 200);
-    return success(res, { items, total }, "Verification requests fetched.", 200);
+    if (total === 0)
+      return failure(res, "No verification requests found.", 200);
+    return success(
+      res,
+      { items, total },
+      "Verification requests fetched.",
+      200,
+    );
   } catch (error) {
     return failure(res, error.message);
   }
@@ -114,7 +167,18 @@ export async function createVerificationRequestController(req, res) {
   try {
     const { userId } = req.params;
     const { documents, message } = req.body;
-    const request = await createVerificationRequestService(userId, { documents, message });
+    const request = await createVerificationRequestService(userId, {
+      documents,
+      message,
+    });
+
+    await broadcastToAdmins({
+      title: "New Verification Request",
+      message: `${req.user?.name} has submitted a verification request.`,
+      type: "info",
+      link: "/requests",
+    });
+
     return success(res, request, "Verification request submitted.", 201);
   } catch (error) {
     return failure(res, error.message);
@@ -129,7 +193,20 @@ export async function approveVerificationRequestController(req, res) {
     if (!adminId) throw new Error("Admin authentication required.");
 
     const result = await approveVerificationRequestService(id, adminId);
-    return success(res, result, "Verification approved. Charity is now verified.", 200);
+
+    await broadcastToAdmins({
+      title: "Verification Request Approved",
+      message: `Verification request #${id} has been approved.`,
+      type: "success",
+      link: "/requests",
+    });
+
+    return success(
+      res,
+      result,
+      "Verification approved. Charity is now verified.",
+      200,
+    );
   } catch (error) {
     return failure(res, error.message);
   }
@@ -140,10 +217,22 @@ export async function declineVerificationRequestController(req, res) {
     const { id } = req.params;
     const { reviewNote } = req.body;
     const adminId = req.user?.id ?? null;
-    
+
     if (!adminId) throw new Error("Admin authentication required.");
 
-    const result = await declineVerificationRequestService(id, adminId, reviewNote);
+    const result = await declineVerificationRequestService(
+      id,
+      adminId,
+      reviewNote,
+    );
+
+    await broadcastToAdmins({
+      title: "Verification Request Declined",
+      message: `Verification request #${id} has been declined.`,
+      type: "error",
+      link: "/requests",
+    });
+
     return success(res, result, "Verification request declined.", 200);
   } catch (error) {
     return failure(res, error.message);

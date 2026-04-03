@@ -1,9 +1,14 @@
 import express from "express";
-import { getProfileController, updateProfileController } from "../controllers/profile.controller.js";
+import * as ctrl from "../controllers/profile.controller.js";
+import authenticate from "../middlewares/auth.js";
 
 const router = express.Router();
 
-router.get("/me", getProfileController);
-router.put("/me", updateProfileController);
+router.use(authenticate);
+
+router.get("/", ctrl.getProfile);
+router.put("/", ctrl.updateProfile);
+router.put("/avatar", ctrl.updateAvatar);
+router.put("/password", ctrl.changePassword);
 
 export default router;

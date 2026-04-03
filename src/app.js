@@ -11,6 +11,7 @@ import uploadRouter from "./routes/upload.routes.js";
 import authMiddleware from "./middlewares/auth.js";
 import restrictTo from "./middlewares/restrictTo.js";
 import settingsRoutes from "./routes/settings.routes.js";
+import notificationRoutes from "./routes/notification.routes.js";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
 
@@ -32,7 +33,12 @@ app.use(helmet());
 
 // Routes
 app.use("/api/auth", authRoutes);
-app.use("/api/admin", authMiddleware, restrictTo("ADMIN"), profileRoutes);
+app.use(
+  "/api/admin/profile",
+  authMiddleware,
+  restrictTo("ADMIN"),
+  profileRoutes,
+);
 app.use(
   "/api/admin/dashboard",
   authMiddleware,
@@ -50,5 +56,12 @@ app.use("/api/charities", authMiddleware, restrictTo("ADMIN"), charityRoutes);
 app.use("/api/users", authMiddleware, restrictTo("ADMIN"), userRoutes);
 app.use("/api/requests", authMiddleware, restrictTo("ADMIN"), requestRoutes);
 app.use("/api/upload", uploadRouter);
+
+app.use(
+  "/api/admin/notifications",
+  authMiddleware,
+  restrictTo("ADMIN"),
+  notificationRoutes,
+);
 
 export default app;
