@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
-import * as auditService from "./audit.service.js";
-import prisma from "../config/prisma.js";
+import * as auditService from "../audit.service.js";
+import prisma from "../../config/prisma.js";
 
 export async function getProfile(userId) {
   const user = await prisma.user.findUnique({

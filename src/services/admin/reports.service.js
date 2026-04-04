@@ -1,4 +1,4 @@
-import prisma from "../config/prisma.js";
+import prisma from "../../config/prisma.js";
 import { Prisma } from "@prisma/client";
 
 // Helper: parse date range from query params

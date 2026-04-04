@@ -1,7 +1,7 @@
 import express from "express";
-import * as ctrl from "../controllers/settings.controller.js";
-import authenticate from "../middlewares/auth.js";
-import restrictTo from "../middlewares/restrictTo.js";
+import * as ctrl from "../../controllers/admin/settings.controller.js";
+import authenticate from "../../middlewares/auth.js";
+import restrictTo from "../../middlewares/restrictTo.js";
 
 const router = express.Router();
 

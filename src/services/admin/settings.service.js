@@ -1,6 +1,6 @@
 import crypto from "crypto";
-import * as auditService from "./audit.service.js";
-import prisma from "../config/prisma.js";
+import * as auditService from "../audit.service.js";
+import prisma from "../../config/prisma.js";
 
 export async function getPlatformSettings() {
   const rows = await prisma.platformSetting.findMany();

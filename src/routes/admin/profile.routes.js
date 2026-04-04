@@ -1,6 +1,6 @@
 import express from "express";
-import * as ctrl from "../controllers/profile.controller.js";
-import authenticate from "../middlewares/auth.js";
+import * as ctrl from "../../controllers/admin/profile.controller.js";
+import authenticate from "../../middlewares/auth.js";
 
 const router = express.Router();
 

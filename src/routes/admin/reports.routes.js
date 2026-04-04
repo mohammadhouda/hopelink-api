@@ -5,7 +5,7 @@ import {
   userReport,
   projectReport,
   filterOptions,
-} from "../controllers/report.controller.js";
+} from "../../controllers/admin/reports.controller.js";
 
 const router = express.Router();
 

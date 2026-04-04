@@ -1,19 +1,16 @@
 import express from "express";
 import cors from "cors";
-import authRoutes from "./routes/auth.routes.js";
-import profileRoutes from "./routes/profile.routes.js";
-import charityRoutes from "./routes/charity.routes.js";
-import userRoutes from "./routes/user.route.js";
-import requestRoutes from "./routes/request.routes.js";
-import dashboardRoutes from "./routes/dashboard.routes.js";
-import reportRoutes from "./routes/report.routes.js";
-import uploadRouter from "./routes/upload.routes.js";
-import authMiddleware from "./middlewares/auth.js";
-import restrictTo from "./middlewares/restrictTo.js";
-import settingsRoutes from "./routes/settings.routes.js";
-import notificationRoutes from "./routes/notification.routes.js";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
+
+import authRoutes from "./routes/auth.routes.js";
+import uploadRouter from "./routes/upload.routes.js";
+import adminRoutes from "./routes/admin/index.js";
+import charityRoutes from "./routes/charity/index.js";
+import userRoutes from "./routes/user/index.js";
+
+import authMiddleware from "./middlewares/auth.js";
+import restrictTo from "./middlewares/restrictTo.js";
 
 const app = express();
 
@@ -31,37 +28,17 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(helmet());
 
-// Routes
+// ── Shared routes
 app.use("/api/auth", authRoutes);
-app.use(
-  "/api/admin/profile",
-  authMiddleware,
-  restrictTo("ADMIN"),
-  profileRoutes,
-);
-app.use(
-  "/api/admin/dashboard",
-  authMiddleware,
-  restrictTo("ADMIN"),
-  dashboardRoutes,
-);
-app.use("/api/admin/report", authMiddleware, restrictTo("ADMIN"), reportRoutes);
-app.use(
-  "/api/admin/settings",
-  authMiddleware,
-  restrictTo("ADMIN"),
-  settingsRoutes,
-);
-app.use("/api/charities", authMiddleware, restrictTo("ADMIN"), charityRoutes);
-app.use("/api/users", authMiddleware, restrictTo("ADMIN"), userRoutes);
-app.use("/api/requests", authMiddleware, restrictTo("ADMIN"), requestRoutes);
 app.use("/api/upload", uploadRouter);
 
-app.use(
-  "/api/admin/notifications",
-  authMiddleware,
-  restrictTo("ADMIN"),
-  notificationRoutes,
-);
+// ── Admin portal
+app.use("/api/admin", authMiddleware, restrictTo("ADMIN"), adminRoutes);
+
+// ── Charity portal
+app.use("/api/charity", authMiddleware, restrictTo("CHARITY"), charityRoutes);
+
+// ── User portal
+app.use("/api/user", authMiddleware, restrictTo("USER"), userRoutes);
 
 export default app;

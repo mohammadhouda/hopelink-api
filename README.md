@@ -1,6 +1,6 @@
-# NGO Platform — Admin Backend
+# NGO Platform — Backend API
 
-A production-ready RESTful API for managing an NGO (Non-Governmental Organization) platform. Built with Node.js and Express, it provides full admin capabilities including charity management, user management, verification workflows, reporting, and a secure multi-session authentication system.
+A production-ready RESTful API for the NGO platform. Built with Node.js and Express, it serves three portals — **Admin**, **Charity**, and **User** — under a single server with role-based route isolation, plus shared auth and file upload endpoints.
 
 ---
 
@@ -17,14 +17,17 @@ A production-ready RESTful API for managing an NGO (Non-Governmental Organizatio
 - [Authentication](#authentication)
 - [API Reference](#api-reference)
   - [Auth](#auth)
-  - [Profile](#profile)
-  - [Users](#users)
-  - [Charities](#charities)
-  - [Requests](#requests)
-  - [Dashboard](#dashboard)
-  - [Reports](#reports)
-  - [Notifications](#notifications)
-  - [Settings](#settings)
+  - [Admin Portal](#admin-portal)
+    - [Dashboard](#dashboard)
+    - [Profile](#profile)
+    - [Users](#users)
+    - [Charities](#charities)
+    - [Requests](#requests)
+    - [Reports](#reports)
+    - [Notifications](#notifications)
+    - [Settings](#settings)
+  - [Charity Portal](#charity-portal)
+  - [User Portal](#user-portal)
   - [File Upload](#file-upload)
 - [Security](#security)
 - [Data Models](#data-models)
@@ -58,27 +61,79 @@ admin-backend/
 └── src/
     ├── server.js              # Entry point — starts HTTP server
     ├── app.js                 # Express app, middleware stack, route mounting
+    │
     ├── config/
     │   ├── auth.config.js     # Auth settings (token TTLs, lockout, rate limits)
     │   ├── prisma.js          # Prisma client singleton
     │   └── Supabase.config.js # Supabase client initialization
-    ├── controllers/           # Request handlers (thin layer over services)
-    ├── services/              # Business logic
-    ├── routes/                # Route definitions & middleware wiring
-    ├── middlewares/
+    │
+    ├── middlewares/           # Shared — applied across all portals
     │   ├── auth.js            # JWT authentication
     │   ├── restrictTo.js      # Role-based access control
     │   ├── validate.js        # Joi request validation
     │   └── rateLimiter.js     # Brute-force protection on auth routes
-    ├── validators/            # Joi schemas (charity, user)
+    │
+    ├── validators/            # Shared Joi schemas
+    │   ├── charity.validator.js
+    │   └── user.validator.js
+    │
     ├── utils/
     │   ├── response.js        # Standardized success/failure helpers
     │   ├── security.js        # IP parsing, user-agent parsing, token hashing
     │   └── generateToken.js   # JWT & refresh token generation
+    │
     ├── templates/
     │   └── email.templates.js # Transactional email templates
-    └── cron/
-        └── cleanupRefreshTokens.js  # Scheduled expired-token cleanup
+    │
+    ├── cron/
+    │   └── cleanupRefreshTokens.js  # Scheduled expired-token cleanup
+    │
+    ├── routes/
+    │   ├── auth.routes.js     # Shared — login/register/refresh (/api/auth)
+    │   ├── upload.routes.js   # Shared — file uploads (/api/upload)
+    │   ├── admin/             # Admin portal — mounted at /api/admin
+    │   │   ├── index.js       # Mounts all admin sub-routes
+    │   │   ├── dashboard.routes.js
+    │   │   ├── profile.routes.js
+    │   │   ├── users.routes.js
+    │   │   ├── charities.routes.js
+    │   │   ├── requests.routes.js
+    │   │   ├── reports.routes.js
+    │   │   ├── notifications.routes.js
+    │   │   └── settings.routes.js
+    │   ├── charity/           # Charity portal — mounted at /api/charity
+    │   │   └── index.js
+    │   └── user/              # User portal — mounted at /api/user
+    │       └── index.js
+    │
+    ├── controllers/
+    │   ├── auth.controller.js      # Shared
+    │   ├── upload.controller.js    # Shared
+    │   └── admin/
+    │       ├── dashboard.controller.js
+    │       ├── profile.controller.js
+    │       ├── users.controller.js
+    │       ├── charities.controller.js
+    │       ├── requests.controller.js
+    │       ├── reports.controller.js
+    │       ├── notifications.controller.js
+    │       └── settings.controller.js
+    │
+    └── services/
+        ├── auth.service.js         # Shared
+        ├── upload.service.js       # Shared
+        ├── email.service.js        # Shared
+        ├── notification.service.js # Shared — creates notifications for any role
+        ├── audit.service.js        # Shared
+        ├── loginAttempt.service.js # Shared
+        └── admin/
+            ├── dashboard.service.js
+            ├── profile.service.js
+            ├── users.service.js
+            ├── charities.service.js
+            ├── requests.service.js
+            ├── reports.service.js
+            └── settings.service.js
 ```
 
 ---
@@ -197,6 +252,8 @@ Errors:
 
 ### Auth
 
+> Base path: `/api/auth` — public, shared across all portals.
+
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
 | POST | `/api/auth/register` | Public | Register a new user account |
@@ -211,9 +268,17 @@ Errors:
 
 ---
 
-### Profile
+### Admin Portal
 
-> All profile endpoints require `ADMIN` role.
+> Base path: `/api/admin` — all routes require `ADMIN` role.
+
+#### Dashboard
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/admin/dashboard/stats` | Aggregate statistics for the admin dashboard |
+
+#### Profile
 
 | Method | Endpoint | Description |
 |---|---|---|
@@ -222,22 +287,18 @@ Errors:
 | PUT | `/api/admin/profile/avatar` | Update profile avatar |
 | PUT | `/api/admin/profile/password` | Change password |
 
----
-
-### Users
-
-> All user endpoints require `ADMIN` role.
+#### Users
 
 | Method | Endpoint | Description |
 |---|---|---|
-| GET | `/api/users` | List users (paginated, filterable by search/status/role/city) |
-| GET | `/api/users/cities` | Get distinct cities from user records |
-| GET | `/api/users/:userId` | Get a single user by ID |
-| POST | `/api/users` | Create a new user |
-| PATCH | `/api/users/:userId` | Update user fields |
-| DELETE | `/api/users/:userId` | Soft-delete a user |
+| GET | `/api/admin/users` | List users (paginated, filterable by search/status/role/city) |
+| GET | `/api/admin/users/cities` | Get distinct cities from user records |
+| GET | `/api/admin/users/:userId` | Get a single user by ID |
+| POST | `/api/admin/users` | Create a new user |
+| PATCH | `/api/admin/users/:userId` | Update user fields |
+| DELETE | `/api/admin/users/:userId` | Soft-delete a user |
 
-**Query Parameters for `GET /api/users`:**
+**Query Parameters for `GET /api/admin/users`:**
 
 | Param | Type | Description |
 |---|---|---|
@@ -248,21 +309,17 @@ Errors:
 | `page` | number | Page number (default: 1) |
 | `limit` | number | Items per page (default: 10) |
 
----
-
-### Charities
-
-> All charity endpoints require `ADMIN` role.
+#### Charities
 
 | Method | Endpoint | Description |
 |---|---|---|
-| GET | `/api/charities` | List charities (paginated, filterable) |
-| POST | `/api/charities` | Create a charity account |
-| GET | `/api/charities/:userId` | Get a single charity by user ID |
-| PATCH | `/api/charities/:userId` | Update charity details |
-| DELETE | `/api/charities/:userId` | Soft-delete a charity |
+| GET | `/api/admin/charities` | List charities (paginated, filterable) |
+| POST | `/api/admin/charities` | Create a charity account |
+| GET | `/api/admin/charities/:userId` | Get a single charity by user ID |
+| PATCH | `/api/admin/charities/:userId` | Update charity details |
+| DELETE | `/api/admin/charities/:userId` | Soft-delete a charity |
 
-**Query Parameters for `GET /api/charities`:**
+**Query Parameters for `GET /api/admin/charities`:**
 
 | Param | Type | Description |
 |---|---|---|
@@ -275,59 +332,43 @@ Errors:
 
 **Categories:** `EDUCATION`, `HEALTH`, `ENVIRONMENT`, `ANIMAL_WELFARE`, `SOCIAL`, `OTHER`
 
----
+#### Requests
 
-### Requests
+Handles two workflows: **registration** (new charities apply to join) and **verification** (existing charities submit verification documents).
 
-Handles two request workflows: **registration** (new charities apply to join) and **verification** (existing charities submit verification documents).
-
-#### Registration Requests
+##### Registration Requests
 
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
-| GET | `/api/requests/registration` | ADMIN | List all registration requests |
-| GET | `/api/requests/registration/:id` | ADMIN | Get request details |
-| POST | `/api/requests/registration` | Public | Submit a registration request |
-| PATCH | `/api/requests/registration/:id/approve` | ADMIN | Approve — creates a charity account |
-| PATCH | `/api/requests/registration/:id/decline` | ADMIN | Decline with a review note |
+| GET | `/api/admin/requests/registration` | ADMIN | List all registration requests |
+| GET | `/api/admin/requests/registration/:id` | ADMIN | Get request details |
+| POST | `/api/admin/requests/registration` | ADMIN | Submit a registration request |
+| PATCH | `/api/admin/requests/registration/:id/approve` | ADMIN | Approve — creates a charity account |
+| PATCH | `/api/admin/requests/registration/:id/decline` | ADMIN | Decline with a review note |
 
-#### Verification Requests
-
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| GET | `/api/requests/verification` | ADMIN | List all verification requests |
-| GET | `/api/requests/verification/:id` | ADMIN | Get request details |
-| POST | `/api/requests/verification/:userId` | CHARITY | Submit verification documents |
-| PATCH | `/api/requests/verification/:id/approve` | ADMIN | Approve verification |
-| PATCH | `/api/requests/verification/:id/decline` | ADMIN | Decline with a review note |
-
----
-
-### Dashboard
+##### Verification Requests
 
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
-| GET | `/api/admin/dashboard/stats` | ADMIN | Aggregate statistics for the admin dashboard |
+| GET | `/api/admin/requests/verification` | ADMIN | List all verification requests |
+| GET | `/api/admin/requests/verification/:id` | ADMIN | Get request details |
+| POST | `/api/admin/requests/verification/:userId` | ADMIN | Submit verification documents |
+| PATCH | `/api/admin/requests/verification/:id/approve` | ADMIN | Approve verification |
+| PATCH | `/api/admin/requests/verification/:id/decline` | ADMIN | Decline with a review note |
 
----
+#### Reports
 
-### Reports
-
-> All report endpoints require `ADMIN` role. Supports query-based filtering.
+Supports query-based filtering.
 
 | Method | Endpoint | Description |
 |---|---|---|
-| GET | `/api/admin/report/registration` | Registration request report |
-| GET | `/api/admin/report/ngos` | NGO/charity report |
-| GET | `/api/admin/report/users` | User report |
-| GET | `/api/admin/report/projects` | Project report |
-| GET | `/api/admin/report/filters` | Available filter options for all reports |
+| GET | `/api/admin/reports/registration` | Registration request report |
+| GET | `/api/admin/reports/ngos` | NGO/charity report |
+| GET | `/api/admin/reports/users` | User report |
+| GET | `/api/admin/reports/projects` | Project report |
+| GET | `/api/admin/reports/filters` | Available filter options for all reports |
 
----
-
-### Notifications
-
-> All notification endpoints require `ADMIN` role.
+#### Notifications
 
 | Method | Endpoint | Description |
 |---|---|---|
@@ -337,20 +378,16 @@ Handles two request workflows: **registration** (new charities apply to join) an
 | PUT | `/api/admin/notifications/read-all` | Mark all notifications as read |
 | DELETE | `/api/admin/notifications/:id` | Delete a notification |
 
----
+#### Settings
 
-### Settings
-
-> All settings endpoints require `ADMIN` role.
-
-#### Platform
+##### Platform
 
 | Method | Endpoint | Description |
 |---|---|---|
 | GET | `/api/admin/settings/platform` | Get platform configuration |
 | PUT | `/api/admin/settings/platform` | Update platform configuration |
 
-#### Roles
+##### Roles
 
 | Method | Endpoint | Description |
 |---|---|---|
@@ -359,14 +396,14 @@ Handles two request workflows: **registration** (new charities apply to join) an
 | PUT | `/api/admin/settings/roles/:id` | Update a role |
 | DELETE | `/api/admin/settings/roles/:id` | Delete a role (system roles are protected) |
 
-#### Email Templates
+##### Email Templates
 
 | Method | Endpoint | Description |
 |---|---|---|
 | GET | `/api/admin/settings/email-templates` | List all email templates |
 | PUT | `/api/admin/settings/email-templates/:id` | Update template subject and body |
 
-#### Sessions & Security
+##### Sessions & Security
 
 | Method | Endpoint | Description |
 |---|---|---|
@@ -376,7 +413,7 @@ Handles two request workflows: **registration** (new charities apply to join) an
 | GET | `/api/admin/settings/login-history` | Paginated login history |
 | GET | `/api/admin/settings/audit-log` | Audit log (filterable by user/action) |
 
-#### API Keys
+##### API Keys
 
 | Method | Endpoint | Description |
 |---|---|---|
@@ -384,12 +421,28 @@ Handles two request workflows: **registration** (new charities apply to join) an
 | POST | `/api/admin/settings/api-keys` | Create a new API key |
 | DELETE | `/api/admin/settings/api-keys/:id` | Revoke an API key |
 
-#### Integrations
+##### Integrations
 
 | Method | Endpoint | Description |
 |---|---|---|
 | GET | `/api/admin/settings/integrations` | List all integrations |
 | PATCH | `/api/admin/settings/integrations/:id/toggle` | Enable or disable an integration |
+
+---
+
+### Charity Portal
+
+> Base path: `/api/charity` — all routes require `CHARITY` role.
+
+Routes are being implemented. Sub-routes will include: dashboard, profile, projects, verification, and notifications.
+
+---
+
+### User Portal
+
+> Base path: `/api/user` — all routes require `USER` role.
+
+Routes are being implemented. Sub-routes will include: dashboard, discover, applications, profile, and notifications.
 
 ---
 

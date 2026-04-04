@@ -10,7 +10,7 @@ import {
   createVerificationRequestController,
   approveVerificationRequestController,
   declineVerificationRequestController,
-} from "../controllers/request.controller.js";
+} from "../../controllers/admin/requests.controller.js";
 
 const router = express.Router();
 

@@ -1,4 +1,4 @@
-import { getDashboardStats } from "../services/dashboard.service.js";
+import { getDashboardStats } from "../../services/admin/dashboard.service.js";
 
 export const getStats = async (req, res) => {
   try {

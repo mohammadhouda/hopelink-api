@@ -6,13 +6,13 @@ import {
   createUserController,
   updateUserController,
   deleteUserController,
-} from "../controllers/user.controller.js";
-import { validate } from "../middlewares/validate.js";
+} from "../../controllers/admin/users.controller.js";
+import { validate } from "../../middlewares/validate.js";
 import {
   createUserSchema,
   updateUserSchema,
   userIdParamSchema,
-} from "../validators/user.validator.js";
+} from "../../validators/user.validator.js";
 
 const router = express.Router();
 

@@ -1,5 +1,5 @@
-import * as profileService from "../services/profile.service.js";
-import deleteFileService from "../services/upload.service.js";
+import * as profileService from "../../services/admin/profile.service.js";
+import deleteFileService from "../../services/upload.service.js";
 
 function getIp(req) {
   return (

@@ -1,11 +1,11 @@
-import prisma from "../config/prisma.js";
+import prisma from "../../config/prisma.js";
 import bcrypt from "bcryptjs";
 import {
   sendRegistrationApprovedEmail,
   sendRegistrationDeclinedEmail,
   sendVerificationApprovedEmail,
   sendVerificationDeclinedEmail,
-} from "./email.service.js";
+} from "../email.service.js";
 
 // ── Registration Requests
 export async function getRegistrationRequestsService({

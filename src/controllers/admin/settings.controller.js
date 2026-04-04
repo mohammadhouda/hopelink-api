@@ -1,5 +1,5 @@
-import * as settingsService from "../services/settings.service.js";
-import * as auditService from "../services/audit.service.js";
+import * as settingsService from "../../services/admin/settings.service.js";
+import * as auditService from "../../services/audit.service.js";
 
 function getIp(req) {
   return (

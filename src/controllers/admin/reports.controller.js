@@ -4,7 +4,7 @@ import {
   getUserReport,
   getProjectReport,
   getFilterOptions,
-} from "../services/report.service.js";
+} from "../../services/admin/reports.service.js";
 
 export const registrationReport = async (req, res) => {
   try {

@@ -9,9 +9,9 @@ import {
   createVerificationRequestService,
   approveVerificationRequestService,
   declineVerificationRequestService,
-} from "../services/request.service.js";
-import { success, failure } from "../utils/response.js";
-import { broadcastToAdmins } from "../services/notification.service.js";
+} from "../../services/admin/requests.service.js";
+import { success, failure } from "../../utils/response.js";
+import { broadcastToAdmins } from "../../services/notification.service.js";
 
 // ── Registration Requests ─────────────────────────────────────────────────────
 

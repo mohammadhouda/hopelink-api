@@ -1,5 +1,5 @@
-import {getUsersService, getUserService, getUserCitiesService, updateUserService, deleteUserService, createUserService} from "../services/user.service.js";
-import { success, failure } from "../utils/response.js";
+import {getUsersService, getUserService, getUserCitiesService, updateUserService, deleteUserService, createUserService} from "../../services/admin/users.service.js";
+import { success, failure } from "../../utils/response.js";
 
 export async function getUsersController(req, res) {
   try {

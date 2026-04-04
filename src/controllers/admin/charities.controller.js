@@ -4,8 +4,8 @@ import {
   updateCharityService,
   deleteCharityService,
   getCharityService,
-} from "../services/charity.service.js";
-import { success, failure } from "../utils/response.js";
+} from "../../services/admin/charities.service.js";
+import { success, failure } from "../../utils/response.js";
 
 // charity.controller.js
 export async function getCharitiesController(req, res) {

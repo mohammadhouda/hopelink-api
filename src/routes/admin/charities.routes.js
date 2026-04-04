@@ -5,13 +5,13 @@ import {
   createCharityController,
   updateCharityController,
   deleteCharityController,
-} from "../controllers/charity.controller.js";
-import { validate } from "../middlewares/validate.js";
+} from "../../controllers/admin/charities.controller.js";
+import { validate } from "../../middlewares/validate.js";
 import {
   charityIdParamSchema,
   createCharitySchema,
   updateCharitySchema,
-} from "../validators/charity.validator.js";
+} from "../../validators/charity.validator.js";
 
 const router = express.Router();
 
