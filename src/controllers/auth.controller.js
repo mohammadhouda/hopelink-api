@@ -8,6 +8,7 @@ import {
   revokeSessionService
 } from "../services/auth.service.js";
 import { success, failure } from "../utils/response.js";
+import jwt from "jsonwebtoken";
 import { getClientIp, parseUserAgent } from "../utils/security.js";
 
 const COOKIE_OPTIONS = {
@@ -157,5 +158,18 @@ export async function revokeSessionController(req, res) {
     return success(res, null, "Session revoked.", 200);
   } catch (err) {
     return failure(res, err.message, 400);
+  }
+}
+
+export function socketTokenController(req, res) {
+  try {
+    const token = jwt.sign(
+      { id: req.user.id },
+      process.env.JWT_SECRET_KEY,
+      { expiresIn: "1h" }
+    );
+    return success(res, { token });
+  } catch (err) {
+    return failure(res, err.message, 500);
   }
 }
