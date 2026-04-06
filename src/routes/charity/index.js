@@ -9,6 +9,7 @@ import analyticsRoutes from "./analytics.routes.js";
 import ratingRoutes from "./rating.routes.js";
 import certificateRoutes from "./certificate.routes.js";
 import roomRoutes from "./room.routes.js";
+import notificationRoutes from "./notifications.routes.js";
 
 const router = express.Router();
 
@@ -23,5 +24,5 @@ router.use("/analytics", analyticsRoutes);
 router.use("/ratings", ratingRoutes);
 router.use("/certificates", certificateRoutes);
 router.use("/rooms", roomRoutes);
-
+router.use("/notifications", notificationRoutes);
 export default router;
