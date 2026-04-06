@@ -45,7 +45,7 @@ export async function createNotification({
   userId,
   title,
   message,
-  type = "info",
+  type = "INFO",
   link = null,
 }) {
   return prisma.notification.create({
@@ -62,7 +62,7 @@ export async function deleteNotification(userId, notificationId) {
 export async function broadcastToAdmins({
   title,
   message,
-  type = "info",
+  type = "INFO",
   link = null,
 }) {
   const admins = await prisma.user.findMany({

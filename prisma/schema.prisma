@@ -19,18 +19,23 @@ model User {
   lastLoginIp           String?
   passwordChangedAt     DateTime?
   search_vector         Unsupported("tsvector")?
-  lockout               AccountLockout?
-  ApiKey                ApiKey[]
-  applications          Application[]
-  AuditLog              AuditLog[]
-  baseProfile           BaseProfile?
-  charityAccount        CharityAccount?
-  refreshTokens         RefreshToken[]
-  reviewedRegistrations RegistrationRequest[]    @relation("ReviewedByUser")
-  reviewedVerifications VerificationRequest[]    @relation("ReviewedByUser")
-  verificationRequests  VerificationRequest[]
-  notifications         Notification[]
-  volunteerProfile      VolunteerProfile?
+  lockout                 AccountLockout?
+  ApiKey                  ApiKey[]
+  applications            Application[]
+  AuditLog                AuditLog[]
+  baseProfile             BaseProfile?
+  charityAccount          CharityAccount?
+  refreshTokens           RefreshToken[]
+  reviewedRegistrations   RegistrationRequest[]    @relation("ReviewedByUser")
+  reviewedVerifications   VerificationRequest[]    @relation("ReviewedByUser")
+  verificationRequests    VerificationRequest[]
+  notifications           Notification[]
+  volunteerProfile        VolunteerProfile?
+  opportunityApplications OpportunityApplication[]
+  ratingsReceived         VolunteerRating[]
+  certificates            Certificate[]
+  sentMessages            RoomMessage[]
+  roomMemberships         RoomMember[]
 
   @@index([search_vector], map: "user_search_vector_idx", type: Gin)
 }
@@ -97,20 +102,25 @@ model CharityAccount {
   search_vector   Unsupported("tsvector")?
   user            User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
   charityProjects CharityProject[]
+  opportunities   VolunteeringOpportunity[]
+  ratingsGiven    VolunteerRating[]
+  issuedCerts     Certificate[]
 
   @@index([search_vector], map: "idx_charity_search", type: Gin)
 }
 
 model CharityProject {
-  id           Int            @id @default(autoincrement())
-  title        String
-  description  String
-  status       ProjectStatus  @default(ACTIVE)
-  createdAt    DateTime       @default(now())
-  charityId    Int
-  category     Category?
-  applications Application[]
-  charity      CharityAccount @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  id            Int                       @id @default(autoincrement())
+  title         String
+  description   String
+  status        ProjectStatus             @default(ACTIVE)
+  createdAt     DateTime                  @default(now())
+  updatedAt     DateTime                  @updatedAt
+  charityId     Int
+  category      Category?
+  applications  Application[]
+  opportunities VolunteeringOpportunity[]
+  charity       CharityAccount            @relation(fields: [charityId], references: [id], onDelete: Cascade)
 
   @@index([charityId])
   @@index([status])
@@ -282,15 +292,15 @@ model PlatformSetting {
 }
 
 model Notification {
-  id        Int      @id @default(autoincrement())
+  id        Int              @id @default(autoincrement())
   userId    Int
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   title     String
   message   String
-  type      String   @default("info")  // info, success, warning, error
-  isRead    Boolean  @default(false)
-  link      String?  // optional: click to navigate somewhere
-  createdAt DateTime @default(now())
+  type      NotificationType @default(INFO)
+  isRead    Boolean          @default(false)
+  link      String?
+  createdAt DateTime         @default(now())
 
   @@index([userId, isRead])
   @@index([userId, createdAt])
@@ -327,4 +337,144 @@ enum Category {
   ANIMAL_WELFARE
   SOCIAL
   OTHER
+}
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  DECLINED
+}
+
+enum OpportunityStatus {
+  OPEN
+  FULL
+  ENDED
+  CANCELLED
+}
+
+enum RoomStatus {
+  ACTIVE
+  CLOSED
+}
+
+enum RoomRole {
+  ADMIN
+  MEMBER
+}
+
+model VolunteeringOpportunity {
+  id           Int                      @id @default(autoincrement())
+  title        String
+  description  String
+  startDate    DateTime
+  endDate      DateTime
+  location     String?
+  maxSlots     Int                      @default(10)
+  status       OpportunityStatus        @default(OPEN)
+  charityId    Int
+  projectId    Int?
+  createdAt    DateTime                 @default(now())
+  updatedAt    DateTime                 @updatedAt
+  charity      CharityAccount           @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  project      CharityProject?          @relation(fields: [projectId], references: [id])
+  applications OpportunityApplication[]
+  room         VolunteerRoom?
+  certificates Certificate[]
+  ratings      VolunteerRating[]
+
+  @@index([charityId])
+  @@index([status])
+  @@index([startDate])
+}
+
+model OpportunityApplication {
+  id            Int                     @id @default(autoincrement())
+  message       String?
+  status        ApplicationStatus       @default(PENDING)
+  userId        Int
+  opportunityId Int
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+  user          User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  opportunity   VolunteeringOpportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, opportunityId])
+  @@index([opportunityId])
+  @@index([status])
+}
+
+model VolunteerRating {
+  id            Int                     @id @default(autoincrement())
+  rating        Int
+  comment       String?
+  charityId     Int
+  volunteerId   Int
+  opportunityId Int
+  createdAt     DateTime                @default(now())
+  charity       CharityAccount          @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  volunteer     User                    @relation(fields: [volunteerId], references: [id], onDelete: Cascade)
+  opportunity   VolunteeringOpportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+
+  @@unique([charityId, volunteerId, opportunityId])
+  @@index([volunteerId])
+  @@index([opportunityId])
+}
+
+model Certificate {
+  id              Int                     @id @default(autoincrement())
+  volunteerId     Int
+  opportunityId   Int
+  charityId       Int
+  issuedAt        DateTime                @default(now())
+  certificateData Json?
+  volunteer       User                    @relation(fields: [volunteerId], references: [id], onDelete: Cascade)
+  opportunity     VolunteeringOpportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  charity         CharityAccount          @relation(fields: [charityId], references: [id], onDelete: Cascade)
+
+  @@unique([volunteerId, opportunityId])
+  @@index([volunteerId])
+  @@index([opportunityId])
+}
+
+model VolunteerRoom {
+  id            Int                     @id @default(autoincrement())
+  opportunityId Int                     @unique
+  status        RoomStatus              @default(ACTIVE)
+  createdAt     DateTime                @default(now())
+  closedAt      DateTime?
+  opportunity   VolunteeringOpportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  messages      RoomMessage[]
+  members       RoomMember[]
+}
+
+model RoomMessage {
+  id        Int           @id @default(autoincrement())
+  roomId    Int
+  senderId  Int
+  content   String
+  createdAt DateTime      @default(now())
+  room      VolunteerRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  sender    User          @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, createdAt])
+}
+
+model RoomMember {
+  id       Int           @id @default(autoincrement())
+  roomId   Int
+  userId   Int
+  role     RoomRole      @default(MEMBER)
+  joinedAt DateTime      @default(now())
+  room     VolunteerRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, userId])
+  @@index([roomId])
 }

@@ -63,7 +63,7 @@ export async function createRegistrationRequestController(req, res) {
     await broadcastToAdmins({
       title: "New Registration Request",
       message: `${name} has submitted a registration request.`,
-      type: "info",
+      type: "INFO",
       link: "/requests",
     });
 
@@ -86,7 +86,7 @@ export async function approveRegistrationRequestController(req, res) {
     await broadcastToAdmins({
       title: "Registration Request Approved",
       message: `Registration request #${id} has been approved.`,
-      type: "success",
+      type: "SUCCESS",
       link: "/requests",
     });
 
@@ -118,7 +118,7 @@ export async function declineRegistrationRequestController(req, res) {
     await broadcastToAdmins({
       title: "Registration Request Declined",
       message: `Registration request #${id} has been declined.`,
-      type: "error",
+      type: "ERROR",
       link: "/requests",
     });
 
@@ -175,7 +175,7 @@ export async function createVerificationRequestController(req, res) {
     await broadcastToAdmins({
       title: "New Verification Request",
       message: `${req.user?.name} has submitted a verification request.`,
-      type: "info",
+      type: "INFO",
       link: "/requests",
     });
 
@@ -197,7 +197,7 @@ export async function approveVerificationRequestController(req, res) {
     await broadcastToAdmins({
       title: "Verification Request Approved",
       message: `Verification request #${id} has been approved.`,
-      type: "success",
+      type: "SUCCESS",
       link: "/requests",
     });
 
@@ -229,7 +229,7 @@ export async function declineVerificationRequestController(req, res) {
     await broadcastToAdmins({
       title: "Verification Request Declined",
       message: `Verification request #${id} has been declined.`,
-      type: "error",
+      type: "ERROR",
       link: "/requests",
     });
 
