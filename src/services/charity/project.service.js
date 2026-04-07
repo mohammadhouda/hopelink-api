@@ -1,16 +1,38 @@
 import prisma from "../../config/prisma.js";
 
 export async function createProject(charityId, data) {
-  const { title, description, category } = data;
+  const { title, description, category, startDate, endDate } = data;
+
+  let start_date = new Date(startDate);
+  let end_date = new Date(endDate);
 
   return prisma.charityProject.create({
-    data: { title, description, category, charityId },
+    data: {
+      title,
+      description,
+      category,
+      startDate: start_date,
+      endDate: end_date,
+      charityId,
+    },
   });
 }
 
-export async function getProjects(charityId, { page = 1, limit = 10, status } = {}) {
+export async function getProjects(
+  charityId,
+  { page = 1, limit = 10, status, startFrom, startTo } = {},
+) {
   const skip = (page - 1) * limit;
-  const where = { charityId, ...(status && { status }) };
+
+  const startDateFilter = {};
+  if (startFrom) startDateFilter.gte = new Date(startFrom);
+  if (startTo) startDateFilter.lte = new Date(startTo);
+
+  const where = {
+    charityId,
+    ...(status && { status }),
+    ...(Object.keys(startDateFilter).length && { startDate: startDateFilter }),
+  };
 
   const [projects, total] = await Promise.all([
     prisma.charityProject.findMany({

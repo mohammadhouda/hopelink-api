@@ -5,7 +5,7 @@ import {
   logoutService,
   logoutAllService,
   getActiveSessionsService,
-  revokeSessionService
+  revokeSessionService,
 } from "../services/auth.service.js";
 import { success, failure } from "../utils/response.js";
 import jwt from "jsonwebtoken";
@@ -14,7 +14,7 @@ import { getClientIp, parseUserAgent } from "../utils/security.js";
 const COOKIE_OPTIONS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
-  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
 };
 
 function getClientInfo(req) {
@@ -22,24 +22,27 @@ function getClientInfo(req) {
   return {
     ipAddress: getClientIp(req),
     userAgent: userAgent.substring(0, 500),
-    deviceInfo: parseUserAgent(userAgent)
+    deviceInfo: parseUserAgent(userAgent),
   };
 }
 
 export async function registerController(req, res) {
   try {
     const clientInfo = getClientInfo(req);
-    const { user, accessToken, refreshToken } = await registerService(req.body, clientInfo);
+    const { user, accessToken, refreshToken } = await registerService(
+      req.body,
+      clientInfo,
+    );
 
     res.cookie("access_token", accessToken, {
       ...COOKIE_OPTIONS,
-      maxAge: 20 * 60 * 1000
+      maxAge: 20 * 60 * 1000,
     });
 
     res.cookie("refresh_token", refreshToken, {
       ...COOKIE_OPTIONS,
       maxAge: 7 * 24 * 60 * 60 * 1000,
-      path: "/api/auth"
+      path: "/api/auth",
     });
 
     return success(res, user, "User registered successfully.", 201);
@@ -51,17 +54,20 @@ export async function registerController(req, res) {
 export async function loginController(req, res) {
   try {
     const clientInfo = getClientInfo(req);
-    const { user, accessToken, refreshToken, warning } = await loginService(req.body, clientInfo);
+    const { user, accessToken, refreshToken, warning } = await loginService(
+      req.body,
+      clientInfo,
+    );
 
     res.cookie("access_token", accessToken, {
       ...COOKIE_OPTIONS,
-      maxAge: 20 * 60 * 1000
+      maxAge: 20 * 60 * 1000,
     });
 
     res.cookie("refresh_token", refreshToken, {
       ...COOKIE_OPTIONS,
       maxAge: 7 * 24 * 60 * 60 * 1000,
-      path: "/api/auth"
+      path: "/api/auth",
     });
 
     const response = { user };
@@ -83,17 +89,18 @@ export async function refreshController(req, res) {
     }
 
     const clientInfo = getClientInfo(req);
-    const { accessToken, refreshToken: newRefreshToken } = await refreshTokenService(refreshToken, clientInfo);
+    const { accessToken, refreshToken: newRefreshToken } =
+      await refreshTokenService(refreshToken, clientInfo);
 
     res.cookie("access_token", accessToken, {
       ...COOKIE_OPTIONS,
-      maxAge: 20 * 60 * 1000
+      maxAge: 20 * 60 * 1000,
     });
 
     res.cookie("refresh_token", newRefreshToken, {
       ...COOKIE_OPTIONS,
       maxAge: 7 * 24 * 60 * 60 * 1000,
-      path: "/api/auth"
+      path: "/api/auth",
     });
 
     return success(res, null, "Token refreshed successfully.", 200);
@@ -138,7 +145,10 @@ export async function logoutAllController(req, res) {
 
 export async function getSessionsController(req, res) {
   try {
-    const sessions = await getActiveSessionsService(req.user.id, req.user.sessionId);
+    const sessions = await getActiveSessionsService(
+      req.user.id,
+      req.user.sessionId,
+    );
     return success(res, sessions, "Sessions retrieved.", 200);
   } catch (err) {
     return failure(res, err.message, 400);
@@ -151,7 +161,11 @@ export async function revokeSessionController(req, res) {
 
     // Prevent revoking current session
     if (sessionId === req.user.sessionId) {
-      return failure(res, "Cannot revoke current session. Use logout instead.", 400);
+      return failure(
+        res,
+        "Cannot revoke current session. Use logout instead.",
+        400,
+      );
     }
 
     await revokeSessionService(req.user.id, sessionId);
@@ -163,11 +177,9 @@ export async function revokeSessionController(req, res) {
 
 export function socketTokenController(req, res) {
   try {
-    const token = jwt.sign(
-      { id: req.user.id },
-      process.env.JWT_SECRET_KEY,
-      { expiresIn: "1h" }
-    );
+    const token = jwt.sign({ id: req.user.id }, process.env.JWT_SECRET_KEY, {
+      expiresIn: "1h",
+    });
     return success(res, { token });
   } catch (err) {
     return failure(res, err.message, 500);

@@ -58,39 +58,54 @@ export function registerRoomSocket(io) {
             select: { id: true },
           });
 
-          if (!charityAccount || charityAccount.id !== room.opportunity.charityId) {
-            return socket.emit("error", { message: "Access denied: this is not your opportunity" });
+          if (
+            !charityAccount ||
+            charityAccount.id !== room.opportunity.charityId
+          ) {
+            return socket.emit("error", {
+              message: "Access denied: this is not your opportunity",
+            });
           }
         } else if (user.role === "USER" || user.role === "VOLUNTEER") {
           // Volunteer must have an approved application for this specific opportunity
-          const approvedApplication = await prisma.opportunityApplication.findUnique({
-            where: {
-              userId_opportunityId: {
-                userId: user.id,
-                opportunityId: parsedOpportunityId,
+          const approvedApplication =
+            await prisma.opportunityApplication.findUnique({
+              where: {
+                userId_opportunityId: {
+                  userId: user.id,
+                  opportunityId: parsedOpportunityId,
+                },
               },
-            },
-            select: { status: true },
-          });
+              select: { status: true },
+            });
 
           if (!approvedApplication) {
-            return socket.emit("error", { message: "Access denied: you have not applied to this opportunity" });
+            return socket.emit("error", {
+              message:
+                "Access denied: you have not applied to this opportunity",
+            });
           }
 
           if (approvedApplication.status !== "APPROVED") {
-            return socket.emit("error", { message: "Access denied: your application has not been approved" });
+            return socket.emit("error", {
+              message: "Access denied: your application has not been approved",
+            });
           }
         } else {
-          return socket.emit("error", { message: "Access denied: your role cannot join volunteer rooms" });
+          return socket.emit("error", {
+            message: "Access denied: your role cannot join volunteer rooms",
+          });
         }
-        // ─────────────────────────────────────────────────────────────────
 
         const roomKey = `room:${room.id}`;
         socket.join(roomKey);
         socket.currentRoom = roomKey;
         socket.currentRoomId = room.id;
 
-        socket.emit("joined_room", { roomId: room.id, opportunityId: parsedOpportunityId });
+        socket.emit("joined_room", {
+          roomId: room.id,
+          opportunityId: parsedOpportunityId,
+        });
 
         socket.to(roomKey).emit("user_joined", {
           userId: user.id,
@@ -105,7 +120,9 @@ export function registerRoomSocket(io) {
     socket.on("send_message", async ({ content }) => {
       try {
         if (!socket.currentRoomId) {
-          return socket.emit("error", { message: "You must join a room first" });
+          return socket.emit("error", {
+            message: "You must join a room first",
+          });
         }
 
         if (!content?.trim()) {
@@ -130,7 +147,11 @@ export function registerRoomSocket(io) {
           },
           include: {
             sender: {
-              select: { id: true, name: true, baseProfile: { select: { avatarUrl: true } } },
+              select: {
+                id: true,
+                name: true,
+                baseProfile: { select: { avatarUrl: true } },
+              },
             },
           },
         });

@@ -12,11 +12,13 @@ export async function createProject(req, res) {
 
 export async function getProjects(req, res) {
   try {
-    const { page, limit, status } = req.query;
+    const { page, limit, status, startFrom, startTo } = req.query;
     const result = await projectService.getProjects(req.charityId, {
       page: parseInt(page) || 1,
       limit: parseInt(limit) || 10,
       status,
+      startFrom,
+      startTo,
     });
     return success(res, result);
   } catch (err) {

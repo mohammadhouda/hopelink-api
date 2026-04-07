@@ -4,12 +4,14 @@ import * as applicationService from "../../services/charity/application.service.
 export async function getApplications(req, res) {
   try {
     const charityId = req.charityId;
-    const { page, limit, status, opportunityId } = req.query;
+    const { page, limit, status, opportunityId, from, to } = req.query;
     const result = await applicationService.getApplications(charityId, {
       page: parseInt(page) || 1,
       limit: parseInt(limit) || 10,
       status,
       opportunityId: opportunityId ? parseInt(opportunityId) : undefined,
+      from,
+      to,
     });
     return success(res, result);
   } catch (err) {

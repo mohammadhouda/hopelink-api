@@ -1,13 +1,18 @@
 import prisma from "../../config/prisma.js";
 import { createNotification } from "../notification.service.js";
 
-export async function getApplications(charityId, { page = 1, limit = 10, status, opportunityId } = {}) {
+export async function getApplications(charityId, { page = 1, limit = 10, status, opportunityId, from, to } = {}) {
   const skip = (page - 1) * limit;
+
+  const createdAtFilter = {};
+  if (from) createdAtFilter.gte = new Date(from);
+  if (to) createdAtFilter.lte = new Date(to + "T23:59:59.999Z");
 
   const where = {
     opportunity: { charityId },
     ...(status && { status }),
     ...(opportunityId && { opportunityId }),
+    ...(Object.keys(createdAtFilter).length && { createdAt: createdAtFilter }),
   };
 
   const [applications, total] = await Promise.all([

@@ -114,6 +114,8 @@ model CharityProject {
   title         String
   description   String
   status        ProjectStatus             @default(ACTIVE)
+  startDate     DateTime?
+  endDate       DateTime?
   createdAt     DateTime                  @default(now())
   updatedAt     DateTime                  @updatedAt
   charityId     Int
