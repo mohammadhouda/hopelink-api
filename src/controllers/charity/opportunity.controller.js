@@ -14,11 +14,12 @@ export async function createOpportunity(req, res) {
 export async function getOpportunities(req, res) {
   try {
     const charityId = req.charityId;
-    const { page, limit, status } = req.query;
+    const { page, limit, status, projectId } = req.query;
     const result = await opportunityService.getOpportunities(charityId, {
       page: parseInt(page) || 1,
       limit: parseInt(limit) || 10,
       status,
+      projectId: projectId ? parseInt(projectId) : undefined,
     });
     return success(res, result);
   } catch (err) {

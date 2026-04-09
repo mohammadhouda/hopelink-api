@@ -24,10 +24,11 @@ export async function createOpportunity(charityId, data) {
   });
 }
 
-export async function getOpportunities(charityId, { page = 1, limit = 10, status } = {}) {
+export async function getOpportunities(charityId, { page = 1, limit = 10, status, projectId } = {}) {
   const skip = (page - 1) * limit;
   const where = { charityId };
   if (status) where.status = status;
+  if (projectId) where.projectId = projectId;
 
   const [opportunities, total] = await Promise.all([
     prisma.volunteeringOpportunity.findMany({
