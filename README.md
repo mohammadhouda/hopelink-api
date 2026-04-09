@@ -418,6 +418,8 @@ Charities can submit documents to get a verified badge.
 
 #### Notifications
 
+Notifications are scoped to the authenticated user's `userId`. Admin notifications are sent via `broadcastToAdmins()` and are only visible to admin users; charity notifications are sent directly to the charity's user account.
+
 | Method | Endpoint | Description |
 |---|---|---|
 | GET | `/notifications` | List notifications (filter by read status, paginated) |
@@ -503,16 +505,18 @@ Projects are high-level initiatives a charity runs (e.g. "Beach Cleanup Campaign
 
 #### Volunteering Opportunities
 
-An opportunity is a specific volunteer event with dates, a location, and a slot limit.
+An opportunity is a specific volunteer event with dates, a location, and a slot limit. Opportunities can optionally be linked to a project via `projectId`.
 
 | Method | Endpoint | Description |
 |---|---|---|
-| GET | `/opportunities` | List opportunities (filter by `status`) |
+| GET | `/opportunities` | List opportunities (filter by `status`, `projectId`) |
 | POST | `/opportunities` | Create an opportunity |
 | GET | `/opportunities/:id` | Get opportunity details |
 | PATCH | `/opportunities/:id` | Update an opportunity |
 | DELETE | `/opportunities/:id` | Delete an opportunity |
 | PATCH | `/opportunities/:id/end` | Mark as ENDED — closes the volunteer chat room automatically |
+
+Query params for `GET /opportunities`: `status` (`OPEN`/`FULL`/`ENDED`/`CANCELLED`), `projectId`, `page`, `limit`
 
 **Opportunity Statuses:** `OPEN` → `FULL` (when all slots are taken) → `ENDED` or `CANCELLED`
 
