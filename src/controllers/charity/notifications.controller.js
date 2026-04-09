@@ -3,9 +3,9 @@ import { success, failure } from "../../utils/response.js";
 
 export async function getNotifications(req, res) {
   try {
-    const charityId = req.charityId;
+    const userId = req.user.id;
     const { page, limit } = req.query;
-    const result = await notificationService.getNotifications(charityId, {
+    const result = await notificationService.getNotifications(userId, {
       page: parseInt(page) || 1,
       limit: parseInt(limit) || 10,
     });
@@ -21,8 +21,8 @@ export async function getNotifications(req, res) {
 
 export async function getUnreadCount(req, res) {
   try {
-    const charityId = req.charityId;
-    const count = await notificationService.getUnreadCount(charityId);
+    const userId = req.user.id;
+    const count = await notificationService.getUnreadCount(userId);
     return success(res, { unreadCount: count });
   } catch (err) {
     return failure(
@@ -35,8 +35,8 @@ export async function getUnreadCount(req, res) {
 
 export async function markAllAsRead(req, res) {
   try {
-    const charityId = req.charityId;
-    await notificationService.markAllAsRead(charityId);
+    const userId = req.user.id;
+    await notificationService.markAllAsRead(userId);
     return success(res, null, "All notifications marked as read");
   } catch (err) {
     return failure(
@@ -49,9 +49,9 @@ export async function markAllAsRead(req, res) {
 
 export async function markAsRead(req, res) {
   try {
-    const charityId = req.charityId;
+    const userId = req.user.id;
     const notificationId = parseInt(req.params.id);
-    await notificationService.markAsRead(charityId, notificationId);
+    await notificationService.markAsRead(userId, notificationId);
     return success(res, null, "Notification marked as read");
   } catch (err) {
     return failure(
@@ -64,9 +64,9 @@ export async function markAsRead(req, res) {
 
 export async function deleteNotification(req, res) {
   try {
-    const charityId = req.charityId;
+    const userId = req.user.id;
     const notificationId = parseInt(req.params.id);
-    await notificationService.deleteNotification(charityId, notificationId);
+    await notificationService.deleteNotification(userId, notificationId);
     return success(res, null, "Notification deleted");
   } catch (err) {
     return failure(
