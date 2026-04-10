@@ -21,7 +21,6 @@ model User {
   search_vector         Unsupported("tsvector")?
   lockout                 AccountLockout?
   ApiKey                  ApiKey[]
-  applications            Application[]
   AuditLog                AuditLog[]
   baseProfile             BaseProfile?
   charityAccount          CharityAccount?
@@ -120,7 +119,6 @@ model CharityProject {
   updatedAt     DateTime                  @updatedAt
   charityId     Int
   category      Category?
-  applications  Application[]
   opportunities VolunteeringOpportunity[]
   charity       CharityAccount            @relation(fields: [charityId], references: [id], onDelete: Cascade)
 
@@ -128,18 +126,6 @@ model CharityProject {
   @@index([status])
 }
 
-model Application {
-  id               Int            @id @default(autoincrement())
-  message          String?
-  createdAt        DateTime       @default(now())
-  userId           Int
-  charityProjectId Int
-  charityProject   CharityProject @relation(fields: [charityProjectId], references: [id], onDelete: Cascade)
-  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, charityProjectId])
-  @@index([charityProjectId])
-}
 
 model RefreshToken {
   id         String   @id @default(uuid())
