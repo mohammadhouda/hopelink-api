@@ -12,7 +12,8 @@ export async function uploadSingleController(req, res) {
     }
 
     const bucket = req.query.bucket || "documents";
-    const result = await uploadFileService(req.file, bucket);
+    const folder = req.query.folder || null;
+    const result = await uploadFileService(req.file, bucket, folder);
 
     return success(res, result, "File uploaded successfully.", 201);
   } catch (error) {
@@ -28,7 +29,8 @@ export async function uploadMultipleController(req, res) {
     }
 
     const bucket = req.query.bucket || "documents";
-    const results = await uploadFilesService(req.files, bucket);
+    const folder = req.query.folder || null;
+    const results = await uploadFilesService(req.files, bucket, folder);
 
     return success(
       res,

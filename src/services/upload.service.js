@@ -19,7 +19,8 @@ const MAX_SIZE_MB = {
 };
 
 // ── Upload a single file
-export async function uploadFileService(file, bucket = "documents") {
+// folder: optional subfolder within the bucket (e.g. "profile", "posts")
+export async function uploadFileService(file, bucket = "documents", folder = null) {
   if (!BUCKETS[bucket]) {
     throw new Error(
       `Invalid bucket. Allowed: ${Object.keys(BUCKETS).join(", ")}`,
@@ -41,10 +42,10 @@ export async function uploadFileService(file, bucket = "documents") {
     );
   }
 
-  // unique file path: bucket/uuid.ext
+  // unique file path: [folder/]uuid.ext
   const ext = path.extname(file.originalname).toLowerCase();
   const filename = `${uuidv4()}${ext}`;
-  const filePath = filename;
+  const filePath = folder ? `${folder}/${filename}` : filename;
 
   const { error } = await supabase.storage
     .from(BUCKETS[bucket])
@@ -69,7 +70,7 @@ export async function uploadFileService(file, bucket = "documents") {
 }
 
 // ── Upload multiple files
-export async function uploadFilesService(files, bucket = "documents") {
+export async function uploadFilesService(files, bucket = "documents", folder = null) {
   if (!files || files.length === 0) {
     throw new Error("No files provided.");
   }
@@ -79,7 +80,7 @@ export async function uploadFilesService(files, bucket = "documents") {
   }
 
   const results = await Promise.all(
-    files.map((file) => uploadFileService(file, bucket)),
+    files.map((file) => uploadFileService(file, bucket, folder)),
   );
 
   return results;

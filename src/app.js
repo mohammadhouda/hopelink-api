@@ -8,6 +8,7 @@ import uploadRouter from "./routes/upload.routes.js";
 import adminRoutes from "./routes/admin/index.js";
 import charityRoutes from "./routes/charity/index.js";
 import userRoutes from "./routes/user/index.js";
+import postRoutes from "./routes/post.routes.js";
 
 import authMiddleware from "./middlewares/auth.js";
 import restrictTo from "./middlewares/restrictTo.js";
@@ -40,5 +41,8 @@ app.use("/api/charity", authMiddleware, restrictTo("CHARITY"), charityRoutes);
 
 // ── User portal
 app.use("/api/user", authMiddleware, restrictTo("USER"), userRoutes);
+
+// ── Community feed (accessible to users/volunteers and charities)
+app.use("/api/posts", authMiddleware, restrictTo("USER", "CHARITY"), postRoutes);
 
 export default app;

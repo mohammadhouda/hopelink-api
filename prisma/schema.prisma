@@ -35,6 +35,9 @@ model User {
   certificates            Certificate[]
   sentMessages            RoomMessage[]
   roomMemberships         RoomMember[]
+  posts                   Post[]
+  postLikes               PostLike[]
+  postComments            PostComment[]
 
   @@index([search_vector], map: "user_search_vector_idx", type: Gin)
 }
@@ -468,4 +471,52 @@ model RoomMember {
 
   @@unique([roomId, userId])
   @@index([roomId])
+}
+
+model Post {
+  id        Int           @id @default(autoincrement())
+  content   String
+  imageUrl  String?
+  authorId  Int
+  postType  PostType      @default(GENERAL)
+  refId     Int?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  author    User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  likes     PostLike[]
+  comments  PostComment[]
+
+  @@index([authorId])
+  @@index([createdAt])
+}
+
+model PostLike {
+  id        Int      @id @default(autoincrement())
+  postId    Int
+  userId    Int
+  createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([postId])
+}
+
+model PostComment {
+  id        Int      @id @default(autoincrement())
+  postId    Int
+  authorId  Int
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([postId, createdAt])
+}
+
+enum PostType {
+  GENERAL
+  CERTIFICATE
+  PROJECT
 }

@@ -7,6 +7,9 @@ async function main() {
   console.log("🌱 Seeding Hope Link with Lebanese data...\n");
 
   // ── Clear all tables (order matters) ──────────────────────
+  await prisma.postComment.deleteMany();
+  await prisma.postLike.deleteMany();
+  await prisma.post.deleteMany();
   await prisma.roomMessage.deleteMany();
   await prisma.roomMember.deleteMany();
   await prisma.volunteerRoom.deleteMany();
@@ -1158,6 +1161,155 @@ async function main() {
   });
 
   // ══════════════════════════════════════════════════════════
+  //  COMMUNITY POSTS
+  // ══════════════════════════════════════════════════════════
+  console.log("  → Community posts");
+
+  const post1 = await prisma.post.create({
+    data: {
+      authorId: vol1.id,
+      postType: "CERTIFICATE",
+      content: "Just received my certificate for completing the Karantina Community Market volunteer program! 🎉 Truly humbling to work alongside such dedicated people. Helping families access food with dignity is something I'll carry with me forever. If you're looking for a meaningful way to give back in Beirut, I can't recommend Beit El Baraka enough. #HopeLink #Volunteering #Beirut",
+      imageUrl: "https://picsum.photos/seed/cert1/800/400",
+      createdAt: d(-3),
+      updatedAt: d(-3),
+    },
+  });
+
+  const post2 = await prisma.post.create({
+    data: {
+      authorId: charity1User.id,
+      postType: "PROJECT",
+      content: "Week 4 update on the Karantina Community Market project! 🛒\n\nThis week we welcomed 87 new families to the free supermarket, bringing our total to over 1,200 registered families since the project launched. Our volunteer team has been incredible — sorting, stocking shelves, and greeting every family with warmth.\n\nWe're still looking for volunteers for Saturday morning shifts. Apply now through Hope Link!",
+      imageUrl: "https://picsum.photos/seed/market1/800/450",
+      createdAt: d(-5),
+      updatedAt: d(-5),
+    },
+  });
+
+  const post3 = await prisma.post.create({
+    data: {
+      authorId: vol2.id,
+      postType: "GENERAL",
+      content: "Spent Saturday at the Lebanese Food Bank sorting and packing Ramadan food parcels. We packed over 300 parcels in 4 hours as a team — it always amazes me what a group of motivated volunteers can achieve together. Grateful to be part of this community. 🌙",
+      imageUrl: "https://picsum.photos/seed/foodbank1/800/420",
+      createdAt: d(-7),
+      updatedAt: d(-7),
+    },
+  });
+
+  const post4 = await prisma.post.create({
+    data: {
+      authorId: charity4User.id,
+      postType: "PROJECT",
+      content: "Ramadan Food Drive 2026 — Day 3 Update 🌙\n\nAlhamdulillah, we've already collected over 2,000 food parcels across our 5 collection points in Beirut, Tripoli, and Sidon. Each parcel feeds a family for a week.\n\nA huge thank you to every volunteer who has given their time this week. We couldn't do this without you. Join us — every hour counts. Register on Hope Link today.",
+      imageUrl: null,
+      createdAt: d(-2),
+      updatedAt: d(-2),
+    },
+  });
+
+  const post5 = await prisma.post.create({
+    data: {
+      authorId: vol3.id,
+      postType: "GENERAL",
+      content: "After 4 years of social work in Tripoli, I've learned that the most powerful thing you can give someone isn't food or money — it's the feeling that someone sees them and cares. Volunteering has changed how I see the world. If you're on the fence about signing up, just do it. The families you'll meet will change your life.",
+      imageUrl: null,
+      createdAt: d(-10),
+      updatedAt: d(-10),
+    },
+  });
+
+  const post6 = await prisma.post.create({
+    data: {
+      authorId: vol6.id,
+      postType: "GENERAL",
+      content: "Just finished designing the new awareness campaign visuals for Beit El Baraka's winter drive. Volunteering my design skills feels so much more meaningful than client work — you can see the impact directly. Happy to connect with other creatives who want to contribute to NGOs in Lebanon! 🎨",
+      imageUrl: "https://picsum.photos/seed/design1/800/430",
+      createdAt: d(-6),
+      updatedAt: d(-6),
+    },
+  });
+
+  const post7 = await prisma.post.create({
+    data: {
+      authorId: charity3User.id,
+      postType: "PROJECT",
+      content: "Our Bekaa Mobile Health Clinic completed its 12th session this month ✅\n\nBy the numbers:\n• 340 consultations\n• 180 vaccinations administered\n• 5 villages visited\n• 12 volunteer medical staff\n\nThank you to our incredible team of volunteer doctors, nurses, and pharmacists. Applications are open for the next rotation — health professionals welcome!",
+      imageUrl: "https://picsum.photos/seed/clinic1/800/450",
+      createdAt: d(-4),
+      updatedAt: d(-4),
+    },
+  });
+
+  const post8 = await prisma.post.create({
+    data: {
+      authorId: vol4.id,
+      postType: "CERTIFICATE",
+      content: "Received my volunteer certificate from Arcenciel for the Bekaa Mobile Clinic rotation! This was my first medical volunteering experience and it surpassed every expectation. Watching patients receive care they couldn't otherwise access — I'm more motivated than ever to continue. Next stop: applying for the summer rotation! 💙",
+      imageUrl: null,
+      createdAt: d(-1),
+      updatedAt: d(-1),
+    },
+  });
+
+  // ── Likes ────────────────────────────────────────────────
+  await prisma.postLike.createMany({
+    data: [
+      { postId: post1.id, userId: vol2.id },
+      { postId: post1.id, userId: vol3.id },
+      { postId: post1.id, userId: vol5.id },
+      { postId: post1.id, userId: charity1User.id },
+      { postId: post2.id, userId: vol1.id },
+      { postId: post2.id, userId: vol2.id },
+      { postId: post2.id, userId: vol4.id },
+      { postId: post2.id, userId: vol6.id },
+      { postId: post2.id, userId: vol3.id },
+      { postId: post3.id, userId: vol1.id },
+      { postId: post3.id, userId: vol4.id },
+      { postId: post3.id, userId: charity4User.id },
+      { postId: post4.id, userId: vol2.id },
+      { postId: post4.id, userId: vol3.id },
+      { postId: post4.id, userId: vol5.id },
+      { postId: post5.id, userId: vol1.id },
+      { postId: post5.id, userId: vol4.id },
+      { postId: post5.id, userId: vol6.id },
+      { postId: post5.id, userId: charity2User.id },
+      { postId: post6.id, userId: vol1.id },
+      { postId: post6.id, userId: vol2.id },
+      { postId: post6.id, userId: charity1User.id },
+      { postId: post7.id, userId: vol1.id },
+      { postId: post7.id, userId: vol2.id },
+      { postId: post7.id, userId: vol4.id },
+      { postId: post7.id, userId: vol5.id },
+      { postId: post8.id, userId: vol1.id },
+      { postId: post8.id, userId: vol2.id },
+      { postId: post8.id, userId: vol3.id },
+      { postId: post8.id, userId: charity3User.id },
+    ],
+  });
+
+  // ── Comments ──────────────────────────────────────────────
+  await prisma.postComment.createMany({
+    data: [
+      { postId: post1.id, authorId: vol2.id,        content: "Congratulations Karim! Beit El Baraka is such an inspiring organization. You should be proud! 💪", createdAt: d(-3), updatedAt: d(-3) },
+      { postId: post1.id, authorId: charity1User.id, content: "It was an honor to have you with us, Karim. Your energy and dedication made a real difference for our families. Thank you!", createdAt: d(-3), updatedAt: d(-3) },
+      { postId: post1.id, authorId: vol5.id,         content: "This is so inspiring. I just applied through Hope Link after reading this post!", createdAt: d(-2), updatedAt: d(-2) },
+      { postId: post2.id, authorId: vol1.id,         content: "Signed up for next Saturday's shift! Can't wait to contribute.", createdAt: d(-5), updatedAt: d(-5) },
+      { postId: post2.id, authorId: vol6.id,         content: "Would love to help with any marketing or social media you need — just message me!", createdAt: d(-4), updatedAt: d(-4) },
+      { postId: post3.id, authorId: vol3.id,         content: "300 parcels in 4 hours is incredible teamwork. The Ramadan drive is one of the most impactful things I've seen.", createdAt: d(-7), updatedAt: d(-7) },
+      { postId: post3.id, authorId: charity4User.id, content: "Thank you Lara — your commitment every single week means so much to our team and to the families we serve. 🌙", createdAt: d(-6), updatedAt: d(-6) },
+      { postId: post5.id, authorId: vol1.id,         content: "This is exactly why I started volunteering. Thank you for putting it into words, Omar.", createdAt: d(-9), updatedAt: d(-9) },
+      { postId: post5.id, authorId: vol4.id,         content: "4 years is remarkable. Your experience is such a resource for newer volunteers like me.", createdAt: d(-9), updatedAt: d(-9) },
+      { postId: post6.id, authorId: vol4.id,         content: "Your designs are amazing, Nadia! Would love to see the full campaign when it launches.", createdAt: d(-6), updatedAt: d(-6) },
+      { postId: post7.id, authorId: vol2.id,         content: "These numbers are incredible. 340 consultations in one month! Healthcare access is so critical right now.", createdAt: d(-4), updatedAt: d(-4) },
+      { postId: post7.id, authorId: vol4.id,         content: "Already applying for the next rotation! This is exactly the kind of work I've been looking to join.", createdAt: d(-3), updatedAt: d(-3) },
+      { postId: post8.id, authorId: vol2.id,         content: "Congratulations Maya! Healthcare volunteering is so meaningful. Proud of you!", createdAt: d(-1), updatedAt: d(-1) },
+      { postId: post8.id, authorId: charity3User.id, content: "Maya was an exceptional volunteer. We look forward to welcoming her back for the summer rotation! 🌟", createdAt: d(-1), updatedAt: d(-1) },
+    ],
+  });
+
+  // ══════════════════════════════════════════════════════════
   //  INTEGRATIONS
   // ══════════════════════════════════════════════════════════
   console.log("  → Integrations");
@@ -1177,6 +1329,8 @@ async function main() {
   console.log("\n✅ Seeding complete!\n");
   console.log("  ┌─────────────────────────────────────────────────────────────────────┐");
   console.log("  │  All accounts use password: Password123!                            │");
+  console.log("  ├─────────────────────────────────────────────────────────────────────┤");
+  console.log("  │  COMMUNITY FEED: 8 posts, 30 likes, 14 comments seeded             │");
   console.log("  ├─────────────────────────────────────────────────────────────────────┤");
   console.log("  │  ADMIN                                                              │");
   console.log("  │    admin@hopelink.org              Mohammad Houda                      │");
