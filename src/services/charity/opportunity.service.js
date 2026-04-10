@@ -1,7 +1,7 @@
 import prisma from "../../config/prisma.js";
 
 export async function createOpportunity(charityId, data) {
-  const { title, description, startDate, endDate, location, maxSlots, projectId } = data;
+  const { title, description, startDate, endDate, location, maxSlots, projectId, requiredSkills, availabilityDays } = data;
 
   if (projectId) {
     const project = await prisma.charityProject.findFirst({
@@ -20,6 +20,8 @@ export async function createOpportunity(charityId, data) {
       maxSlots: maxSlots ?? 10,
       charityId,
       projectId: projectId ?? null,
+      requiredSkills: requiredSkills ?? [],
+      availabilityDays: availabilityDays ?? [],
     },
   });
 }
@@ -67,7 +69,7 @@ export async function updateOpportunity(charityId, opportunityId, data) {
   });
   if (!opportunity) throw { status: 404, message: "Opportunity not found" };
 
-  const { title, description, startDate, endDate, location, maxSlots, status } = data;
+  const { title, description, startDate, endDate, location, maxSlots, status, requiredSkills, availabilityDays } = data;
 
   return prisma.volunteeringOpportunity.update({
     where: { id: opportunityId },
@@ -79,6 +81,8 @@ export async function updateOpportunity(charityId, opportunityId, data) {
       ...(location !== undefined && { location }),
       ...(maxSlots && { maxSlots }),
       ...(status && { status }),
+      ...(requiredSkills !== undefined && { requiredSkills }),
+      ...(availabilityDays !== undefined && { availabilityDays }),
     },
   });
 }

@@ -6,7 +6,6 @@ import applicationRoutes from "./application.routes.js";
 import certificateRoutes from "./certificate.routes.js";
 import notificationRoutes from "./notification.routes.js";
 import roomRoutes from "./room.routes.js";
-import recommendationRoutes from "./recommendation.routes.js";
 
 const router = express.Router();
 
@@ -16,6 +15,5 @@ router.use("/applications", applicationRoutes);
 router.use("/certificates", certificateRoutes);
 router.use("/notifications", notificationRoutes);
 router.use("/rooms", roomRoutes);
-router.use("/recommendations", recommendationRoutes);
 
 export default router;

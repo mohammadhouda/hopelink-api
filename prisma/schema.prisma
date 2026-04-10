@@ -380,6 +380,8 @@ model VolunteeringOpportunity {
   location     String?
   maxSlots     Int                      @default(10)
   status       OpportunityStatus        @default(OPEN)
+  requiredSkills String[]               @default([])
+  availabilityDays String[]             @default([])
   charityId    Int
   projectId    Int?
   createdAt    DateTime                 @default(now())
