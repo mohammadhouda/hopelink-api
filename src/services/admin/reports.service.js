@@ -368,7 +368,7 @@ export const getProjectReport = async (query) => {
           select: { name: true },
         },
         _count: {
-          select: { applications: true },
+          select: { opportunities: true },
         },
       },
     }),
@@ -402,7 +402,7 @@ export const getProjectReport = async (query) => {
       charity: p.charity.name,
       category: p.category,
       status: p.status,
-      applications: p._count.applications,
+      opportunities: p._count.opportunities,
       createdAt: p.createdAt,
     })),
   };

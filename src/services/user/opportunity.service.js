@@ -73,7 +73,7 @@ export async function getOpportunities(userId, { page = 1, limit = 10, status, c
       include: {
         charity: { select: { id: true, name: true, logoUrl: true, category: true, isVerified: true } },
         project: { select: { id: true, title: true } },
-        _count: { select: { applications: true } },
+        _count: { select: { opportunities: true } },
       },
     }),
     prisma.volunteeringOpportunity.count({ where }),
@@ -108,7 +108,7 @@ export async function getOpportunityById(opportunityId, userId) {
     include: {
       charity: { select: { id: true, name: true, logoUrl: true, category: true, isVerified: true, city: true, description: true } },
       project: { select: { id: true, title: true } },
-      _count: { select: { applications: true } },
+      _count: { select: { opportunities: true } },
     },
   });
 

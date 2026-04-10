@@ -41,7 +41,7 @@ export async function getProjects(
       take: limit,
       orderBy: { createdAt: "desc" },
       include: {
-        _count: { select: { opportunities: true, applications: true } },
+        _count: { select: { opportunities: true } },
       },
     }),
     prisma.charityProject.count({ where }),
@@ -56,9 +56,8 @@ export async function getProjectById(charityId, projectId) {
     include: {
       opportunities: {
         orderBy: { createdAt: "desc" },
-        include: { _count: { select: { applications: true } } },
       },
-      _count: { select: { applications: true } },
+      _count: { select: { opportunities: true } },
     },
   });
 
