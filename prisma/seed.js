@@ -31,6 +31,11 @@ async function main() {
   await prisma.registrationRequest.deleteMany();
   await prisma.verificationRequest.deleteMany();
   await prisma.user.deleteMany();
+  await prisma.dynamicRolePermission.deleteMany();
+  await prisma.dynamicRole.deleteMany();
+  await prisma.emailTemplate.deleteMany();
+  await prisma.platformSetting.deleteMany();
+  await prisma.integration.deleteMany();
 
   const password = await bcrypt.hash("Password123!", 12);
   const now = new Date();
