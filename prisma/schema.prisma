@@ -438,6 +438,7 @@ model Certificate {
   charityId       Int
   issuedAt        DateTime                @default(now())
   certificateData Json?
+  pdfUrl          String?
   volunteer       User                    @relation(fields: [volunteerId], references: [id], onDelete: Cascade)
   opportunity     VolunteeringOpportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
   charity         CharityAccount          @relation(fields: [charityId], references: [id], onDelete: Cascade)

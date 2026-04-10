@@ -1,7 +1,8 @@
 import prisma from "../../config/prisma.js";
 import notificationEmitter, { NOTIFY_USER } from "../../events/notificationEmitter.js";
+import { generateCertificatePdf } from "../certificate-pdf.service.js";
 
-export async function issueCertificate(charityId, { volunteerId, opportunityId }) {
+export async function issueCertificate(charityId, { volunteerId, opportunityId, pdfFileUrl }) {
   // Ensure opportunity belongs to charity and has ended
   const opportunity = await prisma.volunteeringOpportunity.findFirst({
     where: { id: opportunityId, charityId },
@@ -31,10 +32,16 @@ export async function issueCertificate(charityId, { volunteerId, opportunityId }
     issuedAt: new Date(),
   };
 
+  // Generate or use provided PDF URL
+  let pdfUrl = pdfFileUrl || null;
+  if (!pdfUrl) {
+    pdfUrl = await generateCertificatePdf(certificateData);
+  }
+
   const certificate = await prisma.certificate.upsert({
     where: { volunteerId_opportunityId: { volunteerId, opportunityId } },
-    create: { volunteerId, opportunityId, charityId, certificateData },
-    update: { certificateData, issuedAt: new Date() },
+    create: { volunteerId, opportunityId, charityId, certificateData, pdfUrl },
+    update: { certificateData, pdfUrl, issuedAt: new Date() },
   });
 
   // Notify volunteer
@@ -77,8 +84,15 @@ export async function bulkIssueCertificates(charityId, opportunityId) {
     issuedAt: new Date(),
   };
 
-  const results = await prisma.$transaction(
+  // Generate all PDFs in parallel
+  const pdfUrls = await Promise.all(
     approvedApplications.map((app) =>
+      generateCertificatePdf({ ...certificateData, volunteerName: app.user.name })
+    )
+  );
+
+  const results = await prisma.$transaction(
+    approvedApplications.map((app, index) =>
       prisma.certificate.upsert({
         where: { volunteerId_opportunityId: { volunteerId: app.userId, opportunityId } },
         create: {
@@ -86,9 +100,11 @@ export async function bulkIssueCertificates(charityId, opportunityId) {
           opportunityId,
           charityId,
           certificateData: { ...certificateData, volunteerName: app.user.name },
+          pdfUrl: pdfUrls[index],
         },
         update: {
           certificateData: { ...certificateData, volunteerName: app.user.name },
+          pdfUrl: pdfUrls[index],
           issuedAt: new Date(),
         },
       })

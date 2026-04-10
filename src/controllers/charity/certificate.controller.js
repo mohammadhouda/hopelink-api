@@ -3,10 +3,11 @@ import * as certService from "../../services/charity/certificate.service.js";
 
 export async function issueCertificate(req, res) {
   try {
-    const { volunteerId, opportunityId } = req.body;
+    const { volunteerId, opportunityId, pdfFileUrl } = req.body;
     const cert = await certService.issueCertificate(req.charityId, {
       volunteerId: parseInt(volunteerId),
       opportunityId: parseInt(opportunityId),
+      pdfFileUrl,
     });
     return success(res, cert, "Certificate issued", 201);
   } catch (err) {
