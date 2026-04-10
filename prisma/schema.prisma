@@ -57,7 +57,7 @@ model VolunteerProfile {
   id               Int                   @id @default(autoincrement())
   userId           Int                   @unique
   isAvailable      Boolean               @default(true)
-  availabilityNote String?
+  availabilityDays String[]              @default([])
   experience       String?
   isVerified       Boolean               @default(false)
   createdAt        DateTime              @default(now())

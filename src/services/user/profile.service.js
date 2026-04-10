@@ -32,7 +32,7 @@ export async function getProfile(userId) {
 }
 
 export async function updateProfile(userId, data) {
-  const { name, phone, city, country, bio, avatarUrl, isAvailable, availabilityNote, experience } = data;
+  const { name, phone, city, country, bio, avatarUrl, isAvailable, availabilityDays, experience } = data;
 
   await prisma.$transaction(async (tx) => {
     if (name) {
@@ -58,18 +58,18 @@ export async function updateProfile(userId, data) {
       },
     });
 
-    if (isAvailable !== undefined || availabilityNote !== undefined || experience !== undefined) {
+    if (isAvailable !== undefined || availabilityDays !== undefined || experience !== undefined) {
       await tx.volunteerProfile.upsert({
         where: { userId },
         create: {
           userId,
           ...(isAvailable !== undefined && { isAvailable }),
-          ...(availabilityNote !== undefined && { availabilityNote }),
+          ...(availabilityDays !== undefined && { availabilityDays }),
           ...(experience !== undefined && { experience }),
         },
         update: {
           ...(isAvailable !== undefined && { isAvailable }),
-          ...(availabilityNote !== undefined && { availabilityNote }),
+          ...(availabilityDays !== undefined && { availabilityDays }),
           ...(experience !== undefined && { experience }),
         },
       });
