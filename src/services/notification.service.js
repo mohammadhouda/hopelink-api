@@ -1,4 +1,5 @@
 import prisma from "../config/prisma.js";
+import notificationEmitter, { NOTIFY_USER, NOTIFY_ADMINS, NOTIFY_CHARITY } from "../events/notificationEmitter.js";
 
 export async function getNotifications(
   userId,
@@ -58,6 +59,22 @@ export async function deleteNotification(userId, notificationId) {
     where: { id: notificationId, userId },
   });
 }
+
+// ── Event-driven listeners ────────────────────────────────────────────────────
+notificationEmitter.on(NOTIFY_USER, async ({ userId, title, message, type = "INFO", link = null }) => {
+  try { await createNotification({ userId, title, message, type, link }); } catch { /* silent */ }
+});
+
+notificationEmitter.on(NOTIFY_ADMINS, async ({ title, message, type = "INFO", link = null }) => {
+  try { await broadcastToAdmins({ title, message, type, link }); } catch { /* silent */ }
+});
+
+notificationEmitter.on(NOTIFY_CHARITY, async ({ charityId, title, message, type = "INFO", link = null }) => {
+  try {
+    const charity = await prisma.charityAccount.findUnique({ where: { id: charityId }, select: { userId: true } });
+    if (charity) await createNotification({ userId: charity.userId, title, message, type, link });
+  } catch { /* silent */ }
+});
 
 export async function broadcastToAdmins({
   title,

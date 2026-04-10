@@ -11,7 +11,7 @@ import {
   declineVerificationRequestService,
 } from "../../services/admin/requests.service.js";
 import { success, failure } from "../../utils/response.js";
-import { broadcastToAdmins } from "../../services/notification.service.js";
+import notificationEmitter, { NOTIFY_ADMINS } from "../../events/notificationEmitter.js";
 
 // ── Registration Requests ─────────────────────────────────────────────────────
 
@@ -60,11 +60,11 @@ export async function createRegistrationRequestController(req, res) {
       message,
     });
 
-    await broadcastToAdmins({
+    notificationEmitter.emit(NOTIFY_ADMINS, {
       title: "New Registration Request",
       message: `${name} has submitted a registration request.`,
       type: "INFO",
-      link: "/requests",
+      link: "/admin/requests",
     });
 
     return success(res, request, "Registration request submitted.", 201);
@@ -83,11 +83,11 @@ export async function approveRegistrationRequestController(req, res) {
 
     const result = await approveRegistrationRequestService(id, adminId);
 
-    await broadcastToAdmins({
+    notificationEmitter.emit(NOTIFY_ADMINS, {
       title: "Registration Request Approved",
       message: `Registration request #${id} has been approved.`,
       type: "SUCCESS",
-      link: "/requests",
+      link: "/admin/requests",
     });
 
     return success(
@@ -115,11 +115,11 @@ export async function declineRegistrationRequestController(req, res) {
       reviewNote,
     );
 
-    await broadcastToAdmins({
+    notificationEmitter.emit(NOTIFY_ADMINS, {
       title: "Registration Request Declined",
       message: `Registration request #${id} has been declined.`,
       type: "ERROR",
-      link: "/requests",
+      link: "/admin/requests",
     });
 
     return success(res, result, "Registration request declined.", 200);
@@ -172,11 +172,11 @@ export async function createVerificationRequestController(req, res) {
       message,
     });
 
-    await broadcastToAdmins({
+    notificationEmitter.emit(NOTIFY_ADMINS, {
       title: "New Verification Request",
       message: `${req.user?.name} has submitted a verification request.`,
       type: "INFO",
-      link: "/requests",
+      link: "/admin/requests",
     });
 
     return success(res, request, "Verification request submitted.", 201);
@@ -194,11 +194,11 @@ export async function approveVerificationRequestController(req, res) {
 
     const result = await approveVerificationRequestService(id, adminId);
 
-    await broadcastToAdmins({
+    notificationEmitter.emit(NOTIFY_ADMINS, {
       title: "Verification Request Approved",
       message: `Verification request #${id} has been approved.`,
       type: "SUCCESS",
-      link: "/requests",
+      link: "/admin/requests",
     });
 
     return success(
@@ -226,11 +226,11 @@ export async function declineVerificationRequestController(req, res) {
       reviewNote,
     );
 
-    await broadcastToAdmins({
+    notificationEmitter.emit(NOTIFY_ADMINS, {
       title: "Verification Request Declined",
       message: `Verification request #${id} has been declined.`,
       type: "ERROR",
-      link: "/requests",
+      link: "/admin/requests",
     });
 
     return success(res, result, "Verification request declined.", 200);

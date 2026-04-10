@@ -1,5 +1,5 @@
 import prisma from "../../config/prisma.js";
-import { createNotification } from "../notification.service.js";
+import notificationEmitter, { NOTIFY_USER } from "../../events/notificationEmitter.js";
 
 export async function issueCertificate(charityId, { volunteerId, opportunityId }) {
   // Ensure opportunity belongs to charity and has ended
@@ -38,12 +38,12 @@ export async function issueCertificate(charityId, { volunteerId, opportunityId }
   });
 
   // Notify volunteer
-  await createNotification({
+  notificationEmitter.emit(NOTIFY_USER, {
     userId: volunteerId,
     title: "Certificate Issued!",
     message: `You have been issued a certificate for completing "${opportunity.title}" with ${opportunity.charity.name}.`,
     type: "SUCCESS",
-    link: `/profile/certificates/${certificate.id}`,
+    link: `/user/certificates`,
   });
 
   return certificate;
@@ -96,16 +96,14 @@ export async function bulkIssueCertificates(charityId, opportunityId) {
   );
 
   // Notify all volunteers
-  await Promise.all(
-    approvedApplications.map((app) =>
-      createNotification({
-        userId: app.userId,
-        title: "Certificate Issued!",
-        message: `You have been issued a certificate for completing "${opportunity.title}".`,
-        type: "SUCCESS",
-        link: `/profile/certificates`,
-      })
-    )
+  approvedApplications.forEach((app) =>
+    notificationEmitter.emit(NOTIFY_USER, {
+      userId: app.userId,
+      title: "Certificate Issued!",
+      message: `You have been issued a certificate for completing "${opportunity.title}".`,
+      type: "SUCCESS",
+      link: `/user/certificates`,
+    })
   );
 
   return { issued: results.length, certificates: results };

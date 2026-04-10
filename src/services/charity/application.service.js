@@ -1,5 +1,5 @@
 import prisma from "../../config/prisma.js";
-import { createNotification } from "../notification.service.js";
+import notificationEmitter, { NOTIFY_USER } from "../../events/notificationEmitter.js";
 
 export async function getApplications(charityId, { page = 1, limit = 10, status, opportunityId, from, to } = {}) {
   const skip = (page - 1) * limit;
@@ -103,12 +103,12 @@ export async function approveApplication(charityId, applicationId) {
   });
 
   // Notify volunteer
-  await createNotification({
+  notificationEmitter.emit(NOTIFY_USER, {
     userId: application.userId,
     title: "Application Approved!",
     message: `Your application for "${application.opportunity.title}" has been approved. You have been added to the volunteer room.`,
     type: "SUCCESS",
-    link: `/opportunities/${application.opportunityId}/room`,
+    link: `/user/rooms/${application.opportunityId}`,
   });
 
   return updated;
@@ -129,14 +129,14 @@ export async function declineApplication(charityId, applicationId, { reason } = 
   });
 
   // Notify volunteer
-  await createNotification({
+  notificationEmitter.emit(NOTIFY_USER, {
     userId: application.userId,
     title: "Application Declined",
     message: reason
       ? `Your application for "${application.opportunity.title}" was declined: ${reason}`
       : `Your application for "${application.opportunity.title}" has been declined.`,
     type: "WARNING",
-    link: `/opportunities/${application.opportunityId}`,
+    link: `/user/opportunities/${application.opportunityId}`,
   });
 
   return updated;

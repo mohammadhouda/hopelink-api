@@ -4,9 +4,11 @@ import * as notificationService from "../../services/notification.service.js";
 export async function getNotifications(req, res) {
   try {
     const { page, limit } = req.query;
+    const parsedLimit = parseInt(limit) || 15;
+    const parsedPage  = parseInt(page)  || 1;
     const result = await notificationService.getNotifications(req.user.id, {
-      page: parseInt(page) || 1,
-      limit: parseInt(limit) || 10,
+      limit: parsedLimit,
+      offset: (parsedPage - 1) * parsedLimit,
     });
     return success(res, result);
   } catch (err) {

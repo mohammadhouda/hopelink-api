@@ -1,5 +1,5 @@
 import prisma from "../../config/prisma.js";
-import { createNotification } from "../notification.service.js";
+import notificationEmitter, { NOTIFY_USER } from "../../events/notificationEmitter.js";
 
 export async function rateVolunteer(charityId, { volunteerId, opportunityId, rating, comment }) {
   // Validate rating range
@@ -30,12 +30,12 @@ export async function rateVolunteer(charityId, { volunteerId, opportunityId, rat
   });
 
   // Notify volunteer
-  await createNotification({
+  notificationEmitter.emit(NOTIFY_USER, {
     userId: volunteerId,
     title: "You received a rating",
     message: `You received a ${rating}/5 rating for "${opportunity.title}".${comment ? ` Comment: ${comment}` : ""}`,
     type: "INFO",
-    link: `/profile/ratings`,
+    link: `/user/profile`,
   });
 
   return ratingRecord;
