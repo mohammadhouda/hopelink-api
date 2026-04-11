@@ -1,4 +1,5 @@
 import prisma from "../../config/prisma.js";
+import { getApplicationCountsByProject } from "../../utils/projectCounts.js";
 
 export async function createProject(charityId, data) {
   const { title, description, category, startDate, endDate } = data;
@@ -40,14 +41,17 @@ export async function getProjects(
       skip,
       take: limit,
       orderBy: { createdAt: "desc" },
-      include: {
-        _count: { select: { opportunities: true } },
-      },
     }),
     prisma.charityProject.count({ where }),
   ]);
 
-  return { projects, total, page, limit };
+  const countMap = await getApplicationCountsByProject(projects.map((p) => p.id));
+  const projectsWithCounts = projects.map((p) => ({
+    ...p,
+    _count: { applications: countMap[p.id] ?? 0 },
+  }));
+
+  return { projects: projectsWithCounts, total, page, limit };
 }
 
 export async function getProjectById(charityId, projectId) {
@@ -56,12 +60,24 @@ export async function getProjectById(charityId, projectId) {
     include: {
       opportunities: {
         orderBy: { createdAt: "desc" },
+        include: {
+          _count: { select: { applications: true } },
+        },
       },
-      _count: { select: { opportunities: true } },
     },
   });
 
   if (!project) throw { status: 404, message: "Project not found" };
+
+  const totalApplications = project.opportunities.reduce(
+    (sum, o) => sum + (o._count?.applications ?? 0),
+    0
+  );
+  project._count = {
+    opportunities: project.opportunities.length,
+    applications: totalApplications,
+  };
+
   return project;
 }
 

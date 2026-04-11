@@ -1,5 +1,6 @@
 import prisma from "../../config/prisma.js";
 import bcrypt from "bcryptjs";
+import { getApplicationCountsByProject } from "../../utils/projectCounts.js";
 
 // charity.service.js
 export async function getCharitiesService({
@@ -117,18 +118,8 @@ export async function getCharityService(userId) {
     throw new Error("Charity not found.");
   }
 
-  // Count applications per project (two hops: project → opportunity → application)
-  const appCounts = await prisma.$queryRaw`
-    SELECT p.id, COUNT(a.id)::int AS "applicationCount"
-    FROM "CharityProject" p
-    LEFT JOIN "VolunteeringOpportunity" o ON o."projectId" = p.id
-    LEFT JOIN "OpportunityApplication" a ON a."opportunityId" = o.id
-    WHERE p."charityId" = ${charity.id}
-    GROUP BY p.id
-  `;
-
-  const countMap = Object.fromEntries(
-    appCounts.map((r) => [r.id, r.applicationCount ?? 0])
+  const countMap = await getApplicationCountsByProject(
+    charity.charityProjects.map((p) => p.id)
   );
 
   charity.charityProjects = charity.charityProjects.map((p) => ({
