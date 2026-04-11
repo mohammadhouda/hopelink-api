@@ -29,6 +29,15 @@ export async function approveApplication(req, res) {
   }
 }
 
+export async function getApplicantProfile(req, res) {
+  try {
+    const result = await applicationService.getApplicantProfile(req.charityId, parseInt(req.params.id));
+    return success(res, result);
+  } catch (err) {
+    return failure(res, err.message || "Failed to fetch applicant profile", err.status || 500);
+  }
+}
+
 export async function declineApplication(req, res) {
   try {
     const charityId = req.charityId;

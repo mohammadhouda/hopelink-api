@@ -122,10 +122,13 @@ export async function getVolunteerDetails(charityId, volunteerId) {
         select: {
           isVerified: true,
           isAvailable: true,
-          availabilityNote: true,
+          availabilityDays: true,
           experience: true,
           skills: { select: { skill: true } },
           preferences: { select: { type: true, value: true } },
+          experiences: {
+            orderBy: [{ isCurrent: "desc" }, { startDate: "desc" }],
+          },
         },
       },
       ratingsReceived: {

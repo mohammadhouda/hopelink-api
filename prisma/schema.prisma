@@ -56,17 +56,34 @@ model BaseProfile {
 }
 
 model VolunteerProfile {
-  id               Int                   @id @default(autoincrement())
-  userId           Int                   @unique
-  isAvailable      Boolean               @default(true)
-  availabilityDays String[]              @default([])
+  id               Int                    @id @default(autoincrement())
+  userId           Int                    @unique
+  isAvailable      Boolean                @default(true)
+  availabilityDays String[]               @default([])
   experience       String?
-  isVerified       Boolean               @default(false)
-  createdAt        DateTime              @default(now())
-  updatedAt        DateTime              @updatedAt
+  isVerified       Boolean                @default(false)
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
   preferences      VolunteerPreference[]
-  user             User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user             User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
   skills           VolunteerSkill[]
+  experiences      VolunteerExperience[]
+}
+
+model VolunteerExperience {
+  id          Int              @id @default(autoincrement())
+  volunteerId Int
+  company     String
+  role        String
+  startDate   DateTime
+  endDate     DateTime?
+  isCurrent   Boolean          @default(false)
+  description String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  volunteer   VolunteerProfile @relation(fields: [volunteerId], references: [id], onDelete: Cascade)
+
+  @@index([volunteerId])
 }
 
 model VolunteerSkill {

@@ -114,6 +114,42 @@ export async function approveApplication(charityId, applicationId) {
   return updated;
 }
 
+export async function getApplicantProfile(charityId, applicationId) {
+  const application = await prisma.opportunityApplication.findFirst({
+    where: { id: applicationId, opportunity: { charityId } },
+    select: { userId: true, message: true, status: true, createdAt: true },
+  });
+  if (!application) throw { status: 404, message: "Application not found" };
+
+  const user = await prisma.user.findUnique({
+    where: { id: application.userId },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      createdAt: true,
+      baseProfile: {
+        select: { avatarUrl: true, phone: true, city: true, country: true, bio: true },
+      },
+      volunteerProfile: {
+        select: {
+          isVerified: true,
+          isAvailable: true,
+          availabilityDays: true,
+          experience: true,
+          skills: { select: { skill: true } },
+          preferences: { select: { type: true, value: true } },
+          experiences: {
+            orderBy: [{ isCurrent: "desc" }, { startDate: "desc" }],
+          },
+        },
+      },
+    },
+  });
+
+  return { ...user, applicationMessage: application.message, applicationStatus: application.status, appliedAt: application.createdAt };
+}
+
 export async function declineApplication(charityId, applicationId, { reason } = {}) {
   const application = await prisma.opportunityApplication.findFirst({
     where: { id: applicationId, opportunity: { charityId } },
