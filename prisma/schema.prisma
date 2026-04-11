@@ -118,14 +118,11 @@ model CharityAccount {
   userId          Int                      @unique
   createdAt       DateTime                 @default(now())
   category        Category?
-  search_vector   Unsupported("tsvector")?
   user            User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
   charityProjects CharityProject[]
   opportunities   VolunteeringOpportunity[]
   ratingsGiven    VolunteerRating[]
   issuedCerts     Certificate[]
-
-  @@index([search_vector], map: "idx_charity_search", type: Gin)
 }
 
 model CharityProject {

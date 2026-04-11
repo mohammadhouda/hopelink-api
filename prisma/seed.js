@@ -407,6 +407,25 @@ async function main() {
   });
 
   // ══════════════════════════════════════════════════════════
+  //  USER SEARCH VECTORS
+  // ══════════════════════════════════════════════════════════
+  console.log("  → User search vectors");
+
+  // Build tsvector from name + email + baseProfile city + bio for full-text search
+  await prisma.$executeRaw`
+    UPDATE "User" u
+    SET search_vector = to_tsvector('simple',
+      coalesce(u.name, '') || ' ' ||
+      coalesce(u.email, '') || ' ' ||
+      coalesce(bp.city, '') || ' ' ||
+      coalesce(bp.country, '') || ' ' ||
+      coalesce(bp.bio, '')
+    )
+    FROM "BaseProfile" bp
+    WHERE bp."userId" = u.id
+  `;
+
+  // ══════════════════════════════════════════════════════════
   //  VOLUNTEER EXPERIENCE HISTORY
   // ══════════════════════════════════════════════════════════
   console.log("  → Volunteer experiences");
