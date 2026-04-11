@@ -21,6 +21,7 @@ async function main() {
   await prisma.charityAccount.deleteMany();
   await prisma.volunteerSkill.deleteMany();
   await prisma.volunteerPreference.deleteMany();
+  await prisma.volunteerExperience.deleteMany();
   await prisma.volunteerProfile.deleteMany();
   await prisma.baseProfile.deleteMany();
   await prisma.notification.deleteMany();
@@ -406,6 +407,145 @@ async function main() {
   });
 
   // ══════════════════════════════════════════════════════════
+  //  VOLUNTEER EXPERIENCE HISTORY
+  // ══════════════════════════════════════════════════════════
+  console.log("  → Volunteer experiences");
+
+  // Fetch volunteer profile IDs (created inside user.create above)
+  const [vp1, vp2, vp3, vp4, vp5, vp6] = await Promise.all([
+    prisma.volunteerProfile.findUnique({ where: { userId: vol1.id } }),
+    prisma.volunteerProfile.findUnique({ where: { userId: vol2.id } }),
+    prisma.volunteerProfile.findUnique({ where: { userId: vol3.id } }),
+    prisma.volunteerProfile.findUnique({ where: { userId: vol4.id } }),
+    prisma.volunteerProfile.findUnique({ where: { userId: vol5.id } }),
+    prisma.volunteerProfile.findUnique({ where: { userId: vol6.id } }),
+  ]);
+
+  await prisma.volunteerExperience.createMany({
+    data: [
+      // Karim Haddad — Civil engineering student at AUB
+      {
+        volunteerId: vp1.id,
+        company: "Beit El Baraka",
+        role: "Reconstruction Volunteer",
+        startDate: new Date("2024-09-01"),
+        endDate: new Date("2024-12-31"),
+        isCurrent: false,
+        description: "Led a team of 6 volunteers in post-blast rubble clearing and basic structural assessment in Karantina. Coordinated with engineers to identify safe rebuilding zones.",
+      },
+      {
+        volunteerId: vp1.id,
+        company: "Al Marfa Engineering",
+        role: "Site Supervisor Intern",
+        startDate: new Date("2023-07-01"),
+        endDate: new Date("2023-09-30"),
+        isCurrent: false,
+        description: "Assisted senior engineers on residential construction projects in Ashrafieh. Handled site safety inspections and material intake logs.",
+      },
+
+      // Lara Mouawad — Nutritionist
+      {
+        volunteerId: vp2.id,
+        company: "Lebanese Food Bank",
+        role: "Nutrition Volunteer",
+        startDate: new Date("2023-01-01"),
+        endDate: null,
+        isCurrent: true,
+        description: "Weekly sorting and distribution shifts. Introduced a nutrition-based parcel system ensuring families receive balanced food items rather than surplus-only donations.",
+      },
+      {
+        volunteerId: vp2.id,
+        company: "Nusaned",
+        role: "Community Kitchen Coordinator",
+        startDate: new Date("2022-06-01"),
+        endDate: new Date("2022-12-31"),
+        isCurrent: false,
+        description: "Managed a community kitchen in Jounieh serving 200+ meals weekly for families affected by the economic crisis. Trained 10 local volunteers on food hygiene and safe preparation.",
+      },
+
+      // Omar Darwish — Social worker from Tripoli
+      {
+        volunteerId: vp3.id,
+        company: "Tripoli Social Services Directorate",
+        role: "Social Case Worker",
+        startDate: new Date("2022-03-01"),
+        endDate: null,
+        isCurrent: true,
+        description: "Conducting family needs assessments, connecting displaced households with legal aid, shelter, and education services. Managing a caseload of 40+ families across the Tripoli governorate.",
+      },
+      {
+        volunteerId: vp3.id,
+        company: "International Rescue Committee (IRC) Lebanon",
+        role: "Field Volunteer",
+        startDate: new Date("2021-01-01"),
+        endDate: new Date("2022-02-28"),
+        isCurrent: false,
+        description: "Supported protection monitoring activities in informal tented settlements in the Bekaa. Documented community concerns and relayed them to IRC program officers.",
+      },
+      {
+        volunteerId: vp3.id,
+        company: "UNHCR Lebanon Partner Organization",
+        role: "Community Outreach Assistant",
+        startDate: new Date("2019-07-01"),
+        endDate: new Date("2020-12-31"),
+        isCurrent: false,
+        description: "Assisted with UNHCR registration drives for Syrian and Palestinian refugees in North Lebanon. Translated Arabic-Kurdish conversations during family interviews.",
+      },
+
+      // Maya Sarkis — Pharmacy student at LAU
+      {
+        volunteerId: vp4.id,
+        company: "Arcenciel",
+        role: "Pharmacy Intern — Mobile Clinics",
+        startDate: new Date("2025-10-01"),
+        endDate: new Date("2026-01-31"),
+        isCurrent: false,
+        description: "Assisted pharmacist supervisor at Bekaa Valley mobile clinics. Dispensed medications for chronic conditions, maintained stock records, and educated patients on proper dosage and storage.",
+      },
+
+      // Rami Najjar — Teacher in Sidon
+      {
+        volunteerId: vp5.id,
+        company: "Sidon Public Secondary School",
+        role: "English & Arabic Teacher",
+        startDate: new Date("2021-09-01"),
+        endDate: null,
+        isCurrent: true,
+        description: "Teaching language and literature classes to grades 8-10. Developed supplementary curricula adapted to students from displaced families with interrupted schooling histories.",
+      },
+      {
+        volunteerId: vp5.id,
+        company: "Ain el-Hilweh Community Learning Center",
+        role: "After-School Tutoring Coordinator",
+        startDate: new Date("2020-09-01"),
+        endDate: new Date("2021-06-30"),
+        isCurrent: false,
+        description: "Organized and delivered free after-school tutoring for 30+ children aged 10-16. Recruited and trained 4 fellow teacher volunteers to cover math and science subjects.",
+      },
+
+      // Nadia Awad — Graphic designer & photographer
+      {
+        volunteerId: vp6.id,
+        company: "Freelance — NGO Sector",
+        role: "Creative Volunteer & Designer",
+        startDate: new Date("2023-01-01"),
+        endDate: null,
+        isCurrent: true,
+        description: "Pro bono graphic design and photography for NGOs including Beit El Baraka, Nusaned, and SESOBEL. Created campaign visuals, social media content, and documentary photo essays.",
+      },
+      {
+        volunteerId: vp6.id,
+        company: "Bourj Hammoud Cultural Events",
+        role: "Event Photographer",
+        startDate: new Date("2024-05-01"),
+        endDate: new Date("2024-11-30"),
+        isCurrent: false,
+        description: "Photographed community events, food distribution days, and cultural festivals in Bourj Hammoud. Provided edited image libraries to organizers for awareness and fundraising use.",
+      },
+    ],
+  });
+
+  // ══════════════════════════════════════════════════════════
   //  CHARITY ACCOUNTS
   // ══════════════════════════════════════════════════════════
   console.log("  → Charity accounts");
@@ -497,6 +637,8 @@ async function main() {
       description: "Setting up and running the Karantina branch of Beit El Baraka's free supermarket, serving 400+ families in one of Beirut's most affected neighborhoods after the port explosion.",
       status: "ACTIVE",
       category: "SOCIAL",
+      startDate: d(-90),
+      endDate: d(90),
     },
   });
 
@@ -507,6 +649,8 @@ async function main() {
       description: "Providing heating fuel, blankets, and winter clothing to vulnerable families in the Bourj Hammoud area during the harsh winter months when many cannot afford electricity.",
       status: "ACTIVE",
       category: "SOCIAL",
+      startDate: d(-60),
+      endDate: d(30),
     },
   });
 
@@ -517,6 +661,8 @@ async function main() {
       description: "Providing tuition scholarships for 200 university students who cannot afford fees after the lira collapse. Covers LAU, AUB, USJ, and public universities.",
       status: "ACTIVE",
       category: "EDUCATION",
+      startDate: d(-120),
+      endDate: d(180),
     },
   });
 
@@ -527,6 +673,8 @@ async function main() {
       description: "Six-month vocational training program in Tripoli covering carpentry, electrical work, and plumbing for unemployed youth aged 18-30.",
       status: "PAUSED",
       category: "EDUCATION",
+      startDate: d(-180),
+      endDate: d(60),
     },
   });
 
@@ -537,6 +685,8 @@ async function main() {
       description: "Operating mobile health clinics across the Bekaa Valley providing free medical consultations, medications, and vaccinations to underserved Lebanese and refugee communities.",
       status: "ACTIVE",
       category: "HEALTH",
+      startDate: d(-150),
+      endDate: d(150),
     },
   });
 
@@ -547,6 +697,8 @@ async function main() {
       description: "Annual Ramadan campaign collecting and distributing food parcels to 5,000+ families across Lebanon. Partnering with supermarkets, restaurants, and farms.",
       status: "ACTIVE",
       category: "SOCIAL",
+      startDate: d(-10),
+      endDate: d(20),
     },
   });
 
@@ -557,6 +709,8 @@ async function main() {
       description: "Training teachers and school staff across Lebanon on identifying and responding to signs of child abuse, neglect, and bullying.",
       status: "ACTIVE",
       category: "EDUCATION",
+      startDate: d(-60),
+      endDate: d(120),
     },
   });
 
@@ -1336,6 +1490,8 @@ async function main() {
   console.log("  │  All accounts use password: Password123!                            │");
   console.log("  ├─────────────────────────────────────────────────────────────────────┤");
   console.log("  │  COMMUNITY FEED: 8 posts, 30 likes, 14 comments seeded             │");
+  console.log("  │  EXPERIENCES: 12 volunteer experience entries seeded               │");
+  console.log("  │  PROJECTS: all 7 projects have start/end dates                     │");
   console.log("  ├─────────────────────────────────────────────────────────────────────┤");
   console.log("  │  ADMIN                                                              │");
   console.log("  │    admin@hopelink.org              Mohammad Houda                      │");
