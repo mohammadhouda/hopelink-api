@@ -31,6 +31,38 @@ export async function getProfile(userId) {
   return user;
 }
 
+export async function getRatingsReceived(userId, { page = 1, limit = 10 } = {}) {
+  const skip = (page - 1) * limit;
+
+  const where = { volunteerId: userId };
+
+  const [ratings, total] = await Promise.all([
+    prisma.volunteerRating.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { createdAt: "desc" },
+      include: {
+        charity: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        opportunity: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+    }),
+    prisma.volunteerRating.count({ where }),
+  ]);
+
+  return { ratings, total, page, limit };
+}
+
 export async function updateProfile(userId, data) {
   const { name, phone, city, country, bio, avatarUrl, isAvailable, availabilityDays, experience } = data;
 

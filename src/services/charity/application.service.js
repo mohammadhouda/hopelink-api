@@ -117,7 +117,14 @@ export async function approveApplication(charityId, applicationId) {
 export async function getApplicantProfile(charityId, applicationId) {
   const application = await prisma.opportunityApplication.findFirst({
     where: { id: applicationId, opportunity: { charityId } },
-    select: { userId: true, message: true, status: true, createdAt: true },
+    select: {
+      userId: true,
+      message: true,
+      status: true,
+      createdAt: true,
+      opportunityId: true,
+      opportunity: { select: { status: true } },
+    },
   });
   if (!application) throw { status: 404, message: "Application not found" };
 
@@ -147,7 +154,43 @@ export async function getApplicantProfile(charityId, applicationId) {
     },
   });
 
-  return { ...user, applicationMessage: application.message, applicationStatus: application.status, appliedAt: application.createdAt };
+  // Get ratings given by this charity to this volunteer
+  const ratings = await prisma.volunteerRating.findMany({
+    where: {
+      volunteerId: application.userId,
+      charityId,
+    },
+    select: {
+      id: true,
+      rating: true,
+      comment: true,
+      createdAt: true,
+      opportunity: {
+        select: {
+          id: true,
+          title: true,
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  // Calculate average rating from this charity
+  const avgRating = ratings.length > 0
+    ? (ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length).toFixed(1)
+    : null;
+
+  return {
+    ...user,
+    applicationMessage: application.message,
+    applicationStatus: application.status,
+    appliedAt: application.createdAt,
+    opportunityId: application.opportunityId,
+    opportunityStatus: application.opportunity.status,
+    ratings,
+    avgRating,
+    totalRatings: ratings.length,
+  };
 }
 
 export async function declineApplication(charityId, applicationId, { reason } = {}) {

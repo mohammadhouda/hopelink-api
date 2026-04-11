@@ -10,6 +10,19 @@ export async function getProfile(req, res) {
   }
 }
 
+export async function getRatingsReceived(req, res) {
+  try {
+    const { page, limit } = req.query;
+    const data = await profileService.getRatingsReceived(req.user.id, {
+      page: parseInt(page) || 1,
+      limit: parseInt(limit) || 10,
+    });
+    return success(res, data);
+  } catch (err) {
+    return failure(res, err.message || "Failed to fetch ratings", err.status || 500);
+  }
+}
+
 export async function updateProfile(req, res) {
   try {
     const data = await profileService.updateProfile(req.user.id, req.body);
