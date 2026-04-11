@@ -34,7 +34,7 @@ export async function getUsersService({
   let searchQuery = "";
   if (search) {
     values.push(search);
-    searchQuery = `AND u.search_vector @@ plainto_tsquery('english', $${values.length}::text)`;
+    searchQuery = `AND u.search_vector @@ plainto_tsquery('simple', $${values.length}::text)`;
   }
 
   const whereClause = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
@@ -54,7 +54,7 @@ export async function getUsersService({
       bp.country,
       bp.bio,
       ${search
-        ? `ts_rank(u.search_vector, plainto_tsquery('english', $${values.length})) as rank`
+        ? `ts_rank(u.search_vector, plainto_tsquery('simple', $${values.length})) as rank`
         : `0 as rank`}
     FROM "User" u
     LEFT JOIN "BaseProfile" bp ON bp."userId" = u.id
@@ -125,20 +125,21 @@ export async function getUserService(userId) {
       volunteerProfile: {
         select: {
           isAvailable: true,
-          availabilityNote: true,
+          availabilityDays: true,
           experience: true,
           isVerified: true,
           skills: { select: { skill: true } },
           preferences: { select: { type: true, value: true } },
         },
       },
-      applications: {
+      opportunityApplications: {
         orderBy: { createdAt: "desc" },
         select: {
           id: true,
+          status: true,
           message: true,
           createdAt: true,
-          charityProject: {
+          opportunity: {
             select: {
               id: true,
               title: true,

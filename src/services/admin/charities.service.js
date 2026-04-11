@@ -39,14 +39,14 @@ export async function getCharitiesService({
   if (search) {
     values.push(search);
     searchQuery = `
-      AND u.search_vector @@ plainto_tsquery('english', $${values.length}::text)
+      AND u.search_vector @@ plainto_tsquery('simple', $${values.length}::text)
     `;
   }
 
   const whereClause = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
 
   const query = `
-    SELECT 
+    SELECT
       c.id,
       c.name,
       c.description,
@@ -64,7 +64,7 @@ export async function getCharitiesService({
       u."isActive",
       ${
         search
-          ? `ts_rank(u.search_vector, plainto_tsquery('english', $${values.length})) as rank`
+          ? `ts_rank(u.search_vector, plainto_tsquery('simple', $${values.length})) as rank`
           : `0 as rank`
       }
     FROM "CharityAccount" c
@@ -109,11 +109,6 @@ export async function getCharityService(userId) {
       },
       charityProjects: {
         orderBy: { createdAt: "desc" },
-        include: {
-          _count: {
-            select: { applications: true },
-          },
-        },
       },
     },
   });
@@ -121,6 +116,25 @@ export async function getCharityService(userId) {
   if (!charity) {
     throw new Error("Charity not found.");
   }
+
+  // Count applications per project (two hops: project → opportunity → application)
+  const appCounts = await prisma.$queryRaw`
+    SELECT p.id, COUNT(a.id)::int AS "applicationCount"
+    FROM "CharityProject" p
+    LEFT JOIN "VolunteeringOpportunity" o ON o."projectId" = p.id
+    LEFT JOIN "OpportunityApplication" a ON a."opportunityId" = o.id
+    WHERE p."charityId" = ${charity.id}
+    GROUP BY p.id
+  `;
+
+  const countMap = Object.fromEntries(
+    appCounts.map((r) => [r.id, r.applicationCount ?? 0])
+  );
+
+  charity.charityProjects = charity.charityProjects.map((p) => ({
+    ...p,
+    _count: { applications: countMap[p.id] ?? 0 },
+  }));
 
   return charity;
 }
