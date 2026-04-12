@@ -230,7 +230,6 @@ All responses use a consistent envelope: `{ success, message, data }`.
 
 **User** (`/api/user` — USER role): match-ranked opportunity feed with filters, application management, volunteer rooms, certificates, experience history, volunteering preferences, notifications, community feed
 
-**Community** (`/api/posts` — USER or CHARITY): paginated feed with likes, comments, and post types (GENERAL / CERTIFICATE / PROJECT)
 
 ---
 
