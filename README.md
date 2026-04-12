@@ -18,6 +18,8 @@ A production-ready REST API powering the **Hope Link** NGO platform — connecti
 | Email | Resend |
 | Validation | Joi |
 | Security | Helmet, express-rate-limit, bcrypt |
+| Job Queue | BullMQ 5 |
+| Cache / Queue Broker | Upstash Redis (serverless, TLS) |
 
 ---
 
@@ -63,6 +65,7 @@ hopelink-api/
     ├── config/
     │   ├── auth.config.js      # Token TTLs, lockout thresholds
     │   ├── prisma.js           # Singleton Prisma client
+    │   ├── redis.js            # Upstash Redis connection options (parsed from REDIS_URL)
     │   └── supabase.config.js  # Supabase storage client
     │
     ├── middlewares/
@@ -84,6 +87,12 @@ hopelink-api/
     │
     ├── controllers/            # Thin wrappers: parse request, call service, return response
     ├── services/               # All business logic lives here
+    │
+    ├── jobs/
+    │   ├── matchScoreQueue.js      # BullMQ Queue — publishes score:volunteer and score:opportunity jobs
+    │   ├── matchScoreWorker.js     # BullMQ Worker — consumes jobs, batch-upserts VolunteerMatchScore rows
+    │   ├── scoreOpportunity.js     # Pure scoring function (skills, days, category, city weights)
+    │   └── backfillScores.js       # One-time script — enqueues score:volunteer for every existing volunteer
     │
     ├── events/
     │   └── notificationEmitter.js  # Node.js EventEmitter for decoupled in-app notifications
@@ -136,6 +145,9 @@ SUPABASE_ANON_KEY=your-anon-key
 
 RESEND_API_KEY=re_xxxxxxxxxxxx
 FROM_EMAIL=onboarding@resend.dev
+
+# Upstash Redis (BullMQ job queue)
+REDIS_URL=rediss://default:PASSWORD@HOST.upstash.io:6379
 
 # Optional overrides
 RATE_LIMIT_MAX_ATTEMPTS=10
@@ -271,37 +283,73 @@ const socket = io("http://localhost:5000", {
 
 ## A Hard Problem We Solved
 
-### Personalized Opportunity Ranking With Accurate Slot Counts
+### Scalable Personalized Opportunity Ranking
 
-**The situation:** We wanted to show volunteers opportunities ranked by how well they matched their profile — skills overlap, preferred category, preferred city, and availability days. A raw SQL `ORDER BY` couldn't do this because the match score is computed in Node.js by comparing two arrays (the volunteer's skills against the opportunity's required skills). We had to fetch, score, sort, and *then* paginate in memory.
+**The situation:** We wanted to show volunteers opportunities ranked by how well they matched their profile — skills overlap, preferred category, preferred city, and availability days. The match score is computed by comparing the volunteer's profile against each opportunity's requirements.
 
-At the same time, we were showing a "slots taken" counter on every opportunity card. The counter was wrong — it was counting every application (PENDING, DECLINED, and APPROVED), so an opportunity with 8 pending applications and no actual volunteers appeared nearly full.
+**Why the naïve approach breaks at scale:** The obvious first cut is to fetch all open opportunities, score each one in Node.js, sort by score, and then slice the result for the requested page:
 
-**Why it was tricky:** Both problems touched the same query. Fixing the count was a one-liner, but the scoring architecture forced us to abandon the usual offset-based DB pagination. If we paginated first and scored second, page 2 would contain opportunities that should have appeared on page 1 (because their score is high but they happen to be in a later DB page).
-
-**The solution:**
-
-*For slot counting* — Prisma's `_count` with a filtered relation:
 ```js
-_count: {
-  select: {
-    applications: { where: { status: "APPROVED" } }
-  }
-}
-```
-This returns only approved applications in the count, regardless of how many pending or declined ones exist.
-
-*For personalized ranking* — sort-then-paginate: fetch all opportunities in one query (no DB-level `skip`/`take`), score each one in memory, sort descending by score, then slice the result array for the requested page:
-```js
-const scored = opportunities.map(opp => ({
-  ...opp,
-  matchScore: computeScore(volunteerProfile, opp),
-}));
+// ❌ Does not scale
+const all = await prisma.volunteeringOpportunity.findMany({ where: { status: "OPEN" } });
+const scored = all.map(opp => ({ ...opp, matchScore: computeScore(profile, opp) }));
 scored.sort((a, b) => b.matchScore - a.matchScore);
-const page = scored.slice(skip, skip + limit);
+return scored.slice(skip, skip + limit);
 ```
 
-When the user has no profile, the endpoint falls back to standard DB-level pagination (no in-memory sort needed), so performance is only paid when personalization is actually used.
+This works fine with 50 opportunities. With 10 000+ it fetches the entire table on every page request — unbounded memory, unbounded latency, and the problem gets worse as the platform grows.
+
+**The solution — pre-computed scores with BullMQ + Upstash Redis:**
+
+Instead of scoring at query time, scores are computed in the background and stored in a dedicated `VolunteerMatchScore` table with a composite primary key `(volunteerId, opportunityId)`:
+
+```
+VolunteerMatchScore
+  volunteerId   Int   ──→ User
+  opportunityId Int   ──→ VolunteeringOpportunity
+  score         Float
+  computedAt    DateTime
+
+  @@id([volunteerId, opportunityId])
+  @@index([volunteerId, score(sort: Desc)])   ← makes ORDER BY score free
+```
+
+**When scores are recomputed:**
+
+| Event | Job enqueued |
+|---|---|
+| Volunteer updates their profile, skills, or preferences | `score:volunteer` — re-scores all OPEN opportunities for that one volunteer |
+| A charity creates a new OPEN opportunity | `score:opportunity` — scores all volunteers against that opportunity |
+| A charity reopens a CANCELLED / ENDED opportunity | `score:opportunity` — same as above |
+| Platform backfill (one-time script) | `score:volunteer` for every existing volunteer |
+
+Jobs are published to a **BullMQ queue** backed by **Upstash Redis** (serverless, TLS). A worker running inside the same server process consumes them with concurrency 5. Each job processes volunteers or opportunities in batches of 500 and bulk-upserts rows using Postgres `ON CONFLICT DO UPDATE`, so the same job can safely be retried:
+
+```js
+await prisma.$executeRaw`
+  INSERT INTO "VolunteerMatchScore" ("volunteerId", "opportunityId", score, "computedAt")
+  VALUES ${Prisma.join(tuples)}
+  ON CONFLICT ("volunteerId", "opportunityId")
+  DO UPDATE SET score = EXCLUDED.score, "computedAt" = NOW()
+`;
+```
+
+**At query time** the opportunities endpoint does a simple indexed lookup — no scoring, no full table scan:
+
+```js
+// ✅ Scales to any number of opportunities
+prisma.volunteerMatchScore.findMany({
+  where:   { volunteerId, opportunity: { status: "OPEN", ...filters } },
+  orderBy: [{ score: "desc" }, { opportunity: { createdAt: "desc" } }],
+  skip,
+  take: limit,
+  include: { opportunity: { include: OPPORTUNITY_INCLUDE } },
+})
+```
+
+The `(volunteerId, score DESC)` index makes this a single B-tree scan. Page 2 is as fast as page 1.
+
+**Fallback:** Volunteers with no profile (no skills, no preferences, no availability) skip the scoring pipeline entirely. Their opportunities endpoint uses standard `createdAt DESC` pagination. The response includes a `hasScores` flag so the frontend can show or hide the match badge UI accordingly.
 
 ---
 
@@ -328,15 +376,17 @@ When the user has no profile, the endpoint falls back to standard DB-level pagin
 
 ```
 User
- ├── BaseProfile           phone, avatar, city, bio
+ ├── BaseProfile           phone, avatar, city (City enum), bio
  ├── VolunteerProfile      availability, experience, isVerified
  │    ├── VolunteerSkill[]
  │    ├── VolunteerPreference[]  (CITY / CATEGORY)
  │    └── VolunteerExperience[]  (LinkedIn-style history)
- ├── CharityAccount
+ ├── VolunteerMatchScore[] ←── VolunteeringOpportunity  (pre-computed scores)
+ ├── CharityAccount        city (City enum)
  │    ├── CharityProject
- │    │    └── VolunteeringOpportunity
+ │    │    └── VolunteeringOpportunity    location (City enum)
  │    │         ├── OpportunityApplication  ←── User
+ │    │         ├── VolunteerMatchScore[]   ←── User
  │    │         ├── VolunteerRoom
  │    │         │    ├── RoomMember         ←── User
  │    │         │    └── RoomMessage        ←── User
@@ -355,3 +405,5 @@ User
 **Opportunity lifecycle:** `OPEN` → `FULL` (auto, when approved count = maxSlots) → `ENDED` or `CANCELLED`
 
 **Category enum:** `EDUCATION` · `HEALTH` · `ENVIRONMENT` · `ANIMAL_WELFARE` · `SOCIAL` · `OTHER`
+
+**City enum:** `BEIRUT` · `TRIPOLI` · `SIDON` · `TYRE` · `JOUNIEH` · `BYBLOS` · `ZAHLE` · `BAALBEK` · `NABATIEH` · `ALEY` · `CHOUF` · `METN` · `KESREWAN` · `AKKAR` · `OTHER`
