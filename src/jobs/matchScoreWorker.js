@@ -138,6 +138,7 @@ async function handleScoreOpportunity({ opportunityId }) {
   let totalScored = 0;
 
   while (true) {
+    // Find volunteers with at least one skill/preference/availability (optimization to skip empty profiles)
     const profiles = await prisma.volunteerProfile.findMany({
       where: {
         OR: [
