@@ -22,6 +22,7 @@ async function main() {
   await prisma.volunteerSkill.deleteMany();
   await prisma.volunteerPreference.deleteMany();
   await prisma.volunteerExperience.deleteMany();
+  await prisma.volunteerMatchScore.deleteMany();
   await prisma.volunteerProfile.deleteMany();
   await prisma.baseProfile.deleteMany();
   await prisma.notification.deleteMany();
@@ -58,7 +59,7 @@ async function main() {
       baseProfile: {
         create: {
           phone: "+961 3 456 789",
-          city: "Beirut",
+          city: "BEIRUT",
           country: "Lebanon",
           bio: "Hope Link platform administrator. Coordinating humanitarian operations across Lebanon since 2022.",
         },
@@ -78,7 +79,7 @@ async function main() {
       baseProfile: {
         create: {
           phone: "+961 1 123 456",
-          city: "Beirut",
+          city: "BEIRUT",
           country: "Lebanon",
         },
       },
@@ -96,7 +97,7 @@ async function main() {
       baseProfile: {
         create: {
           phone: "+961 1 234 567",
-          city: "Beirut",
+          city: "BEIRUT",
           country: "Lebanon",
         },
       },
@@ -114,7 +115,7 @@ async function main() {
       baseProfile: {
         create: {
           phone: "+961 5 927 100",
-          city: "Sin El Fil",
+          city: "METN",
           country: "Lebanon",
         },
       },
@@ -132,7 +133,7 @@ async function main() {
       baseProfile: {
         create: {
           phone: "+961 70 888 999",
-          city: "Beirut",
+          city: "BEIRUT",
           country: "Lebanon",
         },
       },
@@ -150,7 +151,7 @@ async function main() {
       baseProfile: {
         create: {
           phone: "+961 1 395 394",
-          city: "Hazmieh",
+          city: "METN",
           country: "Lebanon",
         },
       },
@@ -169,7 +170,7 @@ async function main() {
       baseProfile: {
         create: {
           phone: "+961 71 123 456",
-          city: "Beirut",
+          city: "BEIRUT",
           country: "Lebanon",
           bio: "Civil engineering student at AUB. Passionate about rebuilding Beirut and giving back to the community.",
         },
@@ -190,7 +191,7 @@ async function main() {
           },
           preferences: {
             create: [
-              { type: "CITY", value: "Beirut" },
+              { type: "CITY", value: "BEIRUT" },
               { type: "CATEGORY", value: "SOCIAL" },
             ],
           },
@@ -210,7 +211,7 @@ async function main() {
       baseProfile: {
         create: {
           phone: "+961 76 789 012",
-          city: "Jounieh",
+          city: "JOUNIEH",
           country: "Lebanon",
           bio: "Nutritionist and mother of two. Volunteers with food banks and runs community cooking workshops for families affected by the economic crisis.",
         },
@@ -231,7 +232,7 @@ async function main() {
           },
           preferences: {
             create: [
-              { type: "CITY", value: "Jounieh" },
+              { type: "CITY", value: "JOUNIEH" },
               { type: "CATEGORY", value: "HEALTH" },
             ],
           },
@@ -251,7 +252,7 @@ async function main() {
       baseProfile: {
         create: {
           phone: "+961 70 456 789",
-          city: "Tripoli",
+          city: "TRIPOLI",
           country: "Lebanon",
           bio: "Social worker from Tripoli. Working with displaced families in the north since 2019.",
         },
@@ -273,7 +274,7 @@ async function main() {
           },
           preferences: {
             create: [
-              { type: "CITY", value: "Tripoli" },
+              { type: "CITY", value: "TRIPOLI" },
               { type: "CATEGORY", value: "SOCIAL" },
             ],
           },
@@ -293,7 +294,7 @@ async function main() {
       baseProfile: {
         create: {
           phone: "+961 3 234 567",
-          city: "Zahle",
+          city: "ZAHLE",
           country: "Lebanon",
           bio: "Pharmacy student at LAU. Interested in health outreach and medication access for underserved communities in the Bekaa.",
         },
@@ -314,7 +315,7 @@ async function main() {
           },
           preferences: {
             create: [
-              { type: "CITY", value: "Zahle" },
+              { type: "CITY", value: "ZAHLE" },
               { type: "CATEGORY", value: "HEALTH" },
             ],
           },
@@ -334,7 +335,7 @@ async function main() {
       baseProfile: {
         create: {
           phone: "+961 78 567 890",
-          city: "Sidon",
+          city: "SIDON",
           country: "Lebanon",
           bio: "Teacher at a public school in Sidon. Passionate about education access for children affected by displacement.",
         },
@@ -356,7 +357,7 @@ async function main() {
           },
           preferences: {
             create: [
-              { type: "CITY", value: "Sidon" },
+              { type: "CITY", value: "SIDON" },
               { type: "CATEGORY", value: "EDUCATION" },
             ],
           },
@@ -376,7 +377,7 @@ async function main() {
       baseProfile: {
         create: {
           phone: "+961 71 678 901",
-          city: "Beirut",
+          city: "BEIRUT",
           country: "Lebanon",
           bio: "Graphic designer and photographer. Documents humanitarian work and creates awareness campaigns for NGOs.",
         },
@@ -397,7 +398,7 @@ async function main() {
           },
           preferences: {
             create: [
-              { type: "CITY", value: "Beirut" },
+              { type: "CITY", value: "BEIRUT" },
               { type: "CATEGORY", value: "OTHER" },
             ],
           },
@@ -417,7 +418,7 @@ async function main() {
     SET search_vector = to_tsvector('simple',
       coalesce(u.name, '') || ' ' ||
       coalesce(u.email, '') || ' ' ||
-      coalesce(bp.city, '') || ' ' ||
+      coalesce(bp.city::text, '') || ' ' ||
       coalesce(bp.country, '') || ' ' ||
       coalesce(bp.bio, '')
     )
@@ -578,7 +579,7 @@ async function main() {
       websiteUrl: "https://beitelbaraka.org",
       phone: "+961 1 123 456",
       address: "Mar Mikhael, Beirut",
-      city: "Beirut",
+      city: "BEIRUT",
       isVerified: true,
       category: "SOCIAL",
     },
@@ -593,7 +594,7 @@ async function main() {
       websiteUrl: "https://nusaned.org",
       phone: "+961 1 234 567",
       address: "Clemenceau, Beirut",
-      city: "Beirut",
+      city: "BEIRUT",
       isVerified: true,
       category: "EDUCATION",
     },
@@ -608,7 +609,7 @@ async function main() {
       websiteUrl: "https://arcenciel.org",
       phone: "+961 5 927 100",
       address: "Sin El Fil, Mount Lebanon",
-      city: "Sin El Fil",
+      city: "METN",
       isVerified: true,
       category: "HEALTH",
     },
@@ -623,7 +624,7 @@ async function main() {
       websiteUrl: "https://lebfoodbank.org",
       phone: "+961 70 888 999",
       address: "Badaro, Beirut",
-      city: "Beirut",
+      city: "BEIRUT",
       isVerified: true,
       category: "SOCIAL",
     },
@@ -638,7 +639,7 @@ async function main() {
       websiteUrl: "https://himaya.org",
       phone: "+961 1 395 394",
       address: "Hazmieh, Mount Lebanon",
-      city: "Hazmieh",
+      city: "METN",
       isVerified: false,
       category: "EDUCATION",
     },
@@ -746,10 +747,12 @@ async function main() {
       title: "Karantina Market Setup — March Shift",
       description: "Help sort donated goods, stock shelves, and assist families during shopping hours at the Karantina free supermarket. Arabic speakers needed for family interaction.",
       startDate: d(-30),
-      endDate: d(-30),
-      location: "Karantina, Beirut",
+      endDate: d(-28),
+      location: "BEIRUT",
       maxSlots: 12,
       status: "ENDED",
+      requiredSkills: ["Arabic/English/French", "Team coordination"],
+      availabilityDays: ["SATURDAY"],
     },
   });
 
@@ -761,10 +764,12 @@ async function main() {
       title: "Karantina Market — April Weekend Volunteers",
       description: "Regular weekend volunteering at Beit El Baraka's Karantina location. Tasks include receiving donations, organizing inventory, and welcoming families.",
       startDate: d(5),
-      endDate: d(5),
-      location: "Karantina, Beirut",
+      endDate: d(7),
+      location: "BEIRUT",
       maxSlots: 8,
       status: "OPEN",
+      requiredSkills: ["Arabic/English/French", "Team coordination"],
+      availabilityDays: ["SATURDAY"],
     },
   });
 
@@ -775,10 +780,12 @@ async function main() {
       title: "Bourj Hammoud Blanket Distribution",
       description: "Door-to-door distribution of blankets and winter supplies in Bourj Hammoud. Volunteers will work in pairs and need to carry supplies up staircases in old buildings.",
       startDate: d(10),
-      endDate: d(10),
-      location: "Bourj Hammoud, Mount Lebanon",
+      endDate: d(11),
+      location: "METN",
       maxSlots: 20,
       status: "OPEN",
+      requiredSkills: ["Construction & manual labor"],
+      availabilityDays: ["SATURDAY"],
     },
   });
 
@@ -791,9 +798,11 @@ async function main() {
       description: "Assist with interviewing scholarship candidates at the Beirut center. Volunteers will help guide students through the process and provide logistical support.",
       startDate: d(-14),
       endDate: d(-14),
-      location: "Clemenceau, Beirut",
+      location: "BEIRUT",
       maxSlots: 10,
       status: "ENDED",
+      requiredSkills: ["Arabic/English", "Report writing"],
+      availabilityDays: ["SATURDAY"],
     },
   });
 
@@ -806,9 +815,11 @@ async function main() {
       description: "Help high school students from underprivileged backgrounds prepare their university applications. Review personal statements and guide them through the process.",
       startDate: d(14),
       endDate: d(60),
-      location: "Nusaned Center, Beirut",
+      location: "BEIRUT",
       maxSlots: 6,
       status: "OPEN",
+      requiredSkills: ["Teaching & tutoring", "Arabic/English"],
+      availabilityDays: ["SATURDAY", "WEDNESDAY"],
     },
   });
 
@@ -820,9 +831,11 @@ async function main() {
       description: "Assist the medical team during a mobile clinic session in Zahle. Tasks include patient registration, pharmacy support, and crowd management. Medical background preferred but not required.",
       startDate: d(7),
       endDate: d(7),
-      location: "Zahle, Bekaa Valley",
+      location: "ZAHLE",
       maxSlots: 15,
       status: "OPEN",
+      requiredSkills: ["Basic medical assistance", "Pharmacy knowledge"],
+      availabilityDays: ["SATURDAY"],
     },
   });
 
@@ -834,9 +847,11 @@ async function main() {
       description: "Join our warehouse team to sort donations and pack 500 food parcels for distribution during Ramadan. Parcels include rice, lentils, oil, sugar, and canned goods.",
       startDate: d(3),
       endDate: d(3),
-      location: "Badaro Warehouse, Beirut",
+      location: "BEIRUT",
       maxSlots: 25,
       status: "OPEN",
+      requiredSkills: ["Food sorting & packaging"],
+      availabilityDays: ["WEDNESDAY"],
     },
   });
 
@@ -848,9 +863,11 @@ async function main() {
       description: "Distribute hot Iftar meals to families in Tariq El Jdideh and surrounding areas. Volunteers will help load vans, navigate neighborhoods, and hand-deliver meals door to door.",
       startDate: d(8),
       endDate: d(8),
-      location: "Tariq El Jdideh, Beirut",
+      location: "BEIRUT",
       maxSlots: 15,
       status: "OPEN",
+      requiredSkills: ["Arabic/English"],
+      availabilityDays: ["SATURDAY"],
     },
   });
 
@@ -861,10 +878,12 @@ async function main() {
       title: "Child Safety Workshop — School Training",
       description: "Help facilitate workshops for teachers in Sidon schools on recognizing signs of child abuse and proper reporting procedures. Training materials provided.",
       startDate: d(21),
-      endDate: d(21),
-      location: "Sidon, South Lebanon",
+      endDate: d(22),
+      location: "SIDON",
       maxSlots: 8,
       status: "OPEN",
+      requiredSkills: ["Teaching & tutoring", "Child psychology basics"],
+      availabilityDays: ["SATURDAY"],
     },
   });
 
