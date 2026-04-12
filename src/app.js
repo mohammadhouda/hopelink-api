@@ -12,6 +12,7 @@ import postRoutes from "./routes/post.routes.js";
 
 import authMiddleware from "./middlewares/auth.js";
 import restrictTo from "./middlewares/restrictTo.js";
+import { serverAdapter } from "./config/bullBoard.js";
 
 const app = express();
 
@@ -23,6 +24,8 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
+
+app.use("/admin/queues", serverAdapter.getRouter());
 
 app.options("*", cors());
 app.use(cookieParser());

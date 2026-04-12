@@ -1,5 +1,20 @@
 import prisma from "../../config/prisma.js";
 import bcrypt from "bcrypt";
+import { matchScoreQueue } from "../../jobs/matchScoreQueue.js";
+
+async function enqueueVolunteerScore(userId) {
+  console.log(`[MatchScore] enqueueing score:volunteer for userId=${userId}`);
+  try {
+    const job = await matchScoreQueue.add(
+      "score:volunteer",
+      { volunteerId: userId },
+    );
+    console.log(`[MatchScore] job enqueued — jobId=${job?.id}`);
+    console.log("[MatchScore] job timestamp:", job.timestamp);
+  } catch (err) {
+    console.error(`[MatchScore] failed to enqueue score:volunteer for userId=${userId}:`, err.message);
+  }
+}
 
 export async function getProfile(userId) {
   const user = await prisma.user.findUnique({
@@ -108,6 +123,7 @@ export async function updateProfile(userId, data) {
     }
   });
 
+  enqueueVolunteerScore(userId);
   return getProfile(userId);
 }
 
@@ -126,6 +142,7 @@ export async function updateSkills(userId, skills) {
     });
   }
 
+  enqueueVolunteerScore(userId);
   return prisma.volunteerSkill.findMany({ where: { volunteerId: profile.id } });
 }
 
@@ -144,6 +161,7 @@ export async function updatePreferences(userId, preferences) {
     });
   }
 
+  enqueueVolunteerScore(userId);
   return prisma.volunteerPreference.findMany({ where: { volunteerId: profile.id } });
 }
 

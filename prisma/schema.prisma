@@ -38,6 +38,7 @@ model User {
   posts                   Post[]
   postLikes               PostLike[]
   postComments            PostComment[]
+  matchScores             VolunteerMatchScore[]
 
   @@index([search_vector], map: "user_search_vector_idx", type: Gin)
 }
@@ -103,6 +104,18 @@ model VolunteerPreference {
   volunteer   VolunteerProfile @relation(fields: [volunteerId], references: [id], onDelete: Cascade)
 
   @@index([type, value])
+}
+
+model VolunteerMatchScore {
+  volunteerId   Int
+  opportunityId Int
+  score         Float
+  computedAt    DateTime                @default(now())
+  volunteer     User                    @relation(fields: [volunteerId], references: [id], onDelete: Cascade)
+  opportunity   VolunteeringOpportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+
+  @@id([volunteerId, opportunityId])
+  @@index([volunteerId, score(sort: Desc)])
 }
 
 model CharityAccount {
@@ -395,6 +408,7 @@ model VolunteeringOpportunity {
   room         VolunteerRoom?
   certificates Certificate[]
   ratings      VolunteerRating[]
+  matchScores  VolunteerMatchScore[]
 
   @@index([charityId])
   @@index([status])

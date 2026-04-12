@@ -3,6 +3,7 @@ import { Server } from "socket.io";
 import app from "./app.js";
 import dotenv from "dotenv";
 import { registerRoomSocket } from "./sockets/room.socket.js";
+import "./jobs/matchScoreWorker.js";
 
 dotenv.config();
 

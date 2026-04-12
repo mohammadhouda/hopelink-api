@@ -1,4 +1,13 @@
 import prisma from "../../config/prisma.js";
+import { matchScoreQueue } from "../../jobs/matchScoreQueue.js";
+
+async function enqueueOpportunityScore(opportunityId) {
+  try {
+    await matchScoreQueue.add("score:opportunity", { opportunityId });
+  } catch (err) {
+    console.error("[MatchScore] failed to enqueue score:opportunity:", err.message);
+  }
+}
 
 export async function createOpportunity(charityId, data) {
   const { title, description, startDate, endDate, location, maxSlots, projectId, requiredSkills, availabilityDays } = data;
@@ -10,7 +19,7 @@ export async function createOpportunity(charityId, data) {
     if (!project) throw { status: 404, message: "Project not found" };
   }
 
-  return prisma.volunteeringOpportunity.create({
+  const opportunity = await prisma.volunteeringOpportunity.create({
     data: {
       title,
       description,
@@ -24,6 +33,9 @@ export async function createOpportunity(charityId, data) {
       availabilityDays: availabilityDays ?? [],
     },
   });
+
+  enqueueOpportunityScore(opportunity.id);
+  return opportunity;
 }
 
 export async function getOpportunities(charityId, { page = 1, limit = 10, status, projectId } = {}) {
@@ -71,7 +83,7 @@ export async function updateOpportunity(charityId, opportunityId, data) {
 
   const { title, description, startDate, endDate, location, maxSlots, status, requiredSkills, availabilityDays } = data;
 
-  return prisma.volunteeringOpportunity.update({
+  const updated = await prisma.volunteeringOpportunity.update({
     where: { id: opportunityId },
     data: {
       ...(title && { title }),
@@ -85,6 +97,16 @@ export async function updateOpportunity(charityId, opportunityId, data) {
       ...(availabilityDays !== undefined && { availabilityDays }),
     },
   });
+
+  if (status === "OPEN") {
+    // Reactivated — recompute scores for all volunteers
+    enqueueOpportunityScore(opportunityId);
+  } else if (status && status !== "OPEN") {
+    // Closed, ended, cancelled — drop stale score rows
+    prisma.volunteerMatchScore.deleteMany({ where: { opportunityId } }).catch(() => {});
+  }
+
+  return updated;
 }
 
 export async function deleteOpportunity(charityId, opportunityId) {
