@@ -98,8 +98,15 @@ export async function updateOpportunity(charityId, opportunityId, data) {
     },
   });
 
-  if (status === "OPEN") {
-    // Reactivated — recompute scores for all volunteers
+  const finalStatus = status ?? opportunity.status;
+
+  const affectsScoring =
+    requiredSkills !== undefined ||
+    availabilityDays !== undefined ||
+    description !== undefined ||
+    status !== undefined;
+
+  if (finalStatus === "OPEN" && affectsScoring) {
     enqueueOpportunityScore(opportunityId);
   } else if (status && status !== "OPEN") {
     // Closed, ended, cancelled — drop stale score rows
