@@ -47,7 +47,7 @@ model BaseProfile {
   id        Int      @id @default(autoincrement())
   phone     String?
   avatarUrl String?
-  city      String?
+  city      City?
   country   String?
   bio       String?
   userId    Int      @unique
@@ -126,7 +126,7 @@ model CharityAccount {
   websiteUrl      String?
   phone           String?
   address         String?
-  city            String?
+  city            City?
   isVerified      Boolean                  @default(false)
   userId          Int                      @unique
   createdAt       DateTime                 @default(now())
@@ -393,7 +393,7 @@ model VolunteeringOpportunity {
   description  String
   startDate    DateTime
   endDate      DateTime
-  location     String?
+  location     City?
   maxSlots     Int                      @default(10)
   status       OpportunityStatus        @default(OPEN)
   requiredSkills String[]               @default([])
@@ -547,4 +547,22 @@ enum PostType {
   GENERAL
   CERTIFICATE
   PROJECT
+}
+
+enum City {
+  BEIRUT
+  TRIPOLI
+  SIDON
+  TYRE
+  JOUNIEH
+  BYBLOS
+  ZAHLE
+  BAALBEK
+  NABATIEH
+  ALEY
+  CHOUF
+  METN
+  KESREWAN
+  AKKAR
+  OTHER
 }

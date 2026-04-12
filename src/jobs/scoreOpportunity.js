@@ -42,7 +42,7 @@ export function scoreOpportunity(opp, volunteerSkills, volunteerDays, preference
   // Preference matches
   for (const pref of preferences) {
     if (pref.type === "CATEGORY" && opp.charity?.category === pref.value) score += 3;
-    if (pref.type === "CITY" && opp.location?.toLowerCase().includes(pref.value.toLowerCase())) score += 2;
+    if (pref.type === "CITY" && opp.location === pref.value) score += 2;
   }
 
   return score;

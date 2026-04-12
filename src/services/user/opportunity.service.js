@@ -13,12 +13,11 @@ export async function getOpportunities(userId, { page = 1, limit = 10, status, c
   const opportunityWhere = {
     status: status || "OPEN",
     ...(category && { charity: { category } }),
-    ...(city     && { location: { contains: city, mode: "insensitive" } }),
+    ...(city     && { location: city }),
     ...(search   && {
       OR: [
         { title:       { contains: search, mode: "insensitive" } },
         { description: { contains: search, mode: "insensitive" } },
-        { location:    { contains: search, mode: "insensitive" } },
       ],
     }),
   };
