@@ -1178,6 +1178,7 @@ async function main() {
           startDate: d(-30), endDate: d(-30), issuedAt: d(-28),
           verificationCode: "HL-2026-KH-001",
         },
+        pdfUrl: "https://example.com/certificates/HL-2026-KH-001.pdf",
       },
       {
         volunteerId: vol6.id, opportunityId: opp1.id, charityId: charity1.id,
@@ -1187,6 +1188,7 @@ async function main() {
           startDate: d(-30), endDate: d(-30), issuedAt: d(-28),
           verificationCode: "HL-2026-NA-002",
         },
+        pdfUrl: "https://example.com/certificates/HL-2026-NA-002.pdf",
       },
       {
         volunteerId: vol2.id, opportunityId: opp4.id, charityId: charity2.id,
@@ -1196,6 +1198,7 @@ async function main() {
           startDate: d(-14), endDate: d(-14), issuedAt: d(-12),
           verificationCode: "HL-2026-LM-003",
         },
+        pdfUrl: "https://example.com/certificates/HL-2026-LM-003.pdf",
       },
     ],
   });
