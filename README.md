@@ -172,6 +172,7 @@ hopelink-api/
     │   ├── restrictTo.js       # Role guard (ADMIN / CHARITY / USER)
     │   ├── attachCharity.js    # Resolves charityId from logged-in user
     │   ├── validate.js         # Joi body validation
+    │   ├── parsePagination.js  # Parses page/limit query params → req.pagination
     │   └── rateLimiter.js      # Brute-force protection on auth routes
     │
     ├── routes/
@@ -183,6 +184,7 @@ hopelink-api/
     │   └── user/
     │
     ├── controllers/            # Thin wrappers: parse request, call service, return response
+    │                           # All handlers are wrapped with asyncHandler — no try/catch boilerplate
     ├── services/               # All business logic lives here
     │
     ├── events/
@@ -193,12 +195,66 @@ hopelink-api/
     │
     ├── utils/
     │   ├── response.js         # Standardized { success, message, data } envelope
+    │   ├── asyncHandler.js     # Wraps controller fns — catches thrown errors automatically
     │   ├── security.js         # IP parsing, token hashing
     │   └── generateToken.js    # JWT + refresh token generation
     │
     └── cron/
         └── cleanupRefreshTokens.js  # Deletes expired refresh tokens daily
 ```
+
+---
+
+## Controller Conventions
+
+### `asyncHandler`
+
+Every controller function is wrapped with `asyncHandler` from `src/utils/asyncHandler.js`. This eliminates per-handler `try/catch` boilerplate — services throw `{ status, message }` objects and the wrapper normalizes them into the standard error envelope automatically.
+
+**Before:**
+```js
+export async function listOpportunities(req, res) {
+  try {
+    const data = await opportunityService.list(req.query);
+    return success(res, "Fetched", data);
+  } catch (err) {
+    return failure(res, err.message || "Something went wrong", err.status || 500);
+  }
+}
+```
+
+**After:**
+```js
+export const listOpportunities = asyncHandler(async (req, res) => {
+  const data = await opportunityService.list(req.query);
+  return success(res, "Fetched", data);
+});
+```
+
+For cases that need specific error-code handling (e.g. Prisma P2002 → 409), controllers use an inner `try/catch` only for that path while still being wrapped by `asyncHandler` for everything else.
+
+---
+
+### `parsePagination` middleware
+
+Attached to any route that accepts `?page=` and `?limit=` query parameters. Parses, clamps, and attaches `req.pagination` so controllers never repeat the same arithmetic:
+
+```js
+// Route
+router.get("/", parsePagination({ defaultLimit: 10, maxLimit: 100 }), listOpportunities);
+
+// Controller
+const { page, limit, skip, take } = req.pagination;
+```
+
+`req.pagination` shape:
+
+| Field | Value |
+|---|---|
+| `page` | Parsed page number, minimum 1 |
+| `limit` | Parsed limit, clamped to `[1, maxLimit]` |
+| `skip` | `(page - 1) * limit` — Prisma `skip` |
+| `take` | Same as `limit` — Prisma `take` |
 
 ---
 
@@ -215,6 +271,15 @@ Two `HttpOnly` cookies — no JavaScript access.
 - **Account lockout:** 5 failed logins → 15-min lockout
 - **Rate limiting:** 10 auth requests per 15-min window
 - **Session limits:** Max 5 concurrent sessions per user
+
+Cookie lifetimes are defined as named constants in `auth.controller.js`:
+
+```js
+const ACCESS_TOKEN_TTL  = 20 * 60 * 1000;        // 20 minutes
+const REFRESH_TOKEN_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
+```
+
+All three auth paths (login, register, refresh) write cookies through a single `setAuthCookies(res, accessToken, refreshToken)` helper instead of duplicating the `res.cookie()` calls in each handler.
 
 ---
 

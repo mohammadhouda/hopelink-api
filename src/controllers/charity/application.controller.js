@@ -1,50 +1,41 @@
-import { success, failure } from "../../utils/response.js";
+import { success } from "../../utils/response.js";
+import { asyncHandler } from "../../utils/asyncHandler.js";
 import * as applicationService from "../../services/charity/application.service.js";
 
-export async function getApplications(req, res) {
-  try {
-    const charityId = req.charityId;
-    const { page, limit, status, opportunityId, from, to } = req.query;
-    const result = await applicationService.getApplications(charityId, {
-      page: parseInt(page) || 1,
-      limit: parseInt(limit) || 10,
-      status,
-      opportunityId: opportunityId ? parseInt(opportunityId) : undefined,
-      from,
-      to,
-    });
-    return success(res, result);
-  } catch (err) {
-    return failure(res, err.message || "Failed to fetch applications", err.status || 500);
-  }
-}
+export const getApplications = asyncHandler(async (req, res) => {
+  const { page, limit, status, opportunityId, from, to } = req.query;
+  const result = await applicationService.getApplications(req.charityId, {
+    page: parseInt(page) || 1,
+    limit: parseInt(limit) || 10,
+    status,
+    opportunityId: opportunityId ? parseInt(opportunityId) : undefined,
+    from,
+    to,
+  });
+  return success(res, result);
+});
 
-export async function approveApplication(req, res) {
-  try {
-    const charityId = req.charityId;
-    const result = await applicationService.approveApplication(charityId, parseInt(req.params.id));
-    return success(res, result, "Application approved and volunteer added to room");
-  } catch (err) {
-    return failure(res, err.message || "Failed to approve application", err.status || 500);
-  }
-}
+export const approveApplication = asyncHandler(async (req, res) => {
+  const result = await applicationService.approveApplication(
+    req.charityId,
+    parseInt(req.params.id),
+  );
+  return success(res, result, "Application approved and volunteer added to room");
+});
 
-export async function getApplicantProfile(req, res) {
-  try {
-    const result = await applicationService.getApplicantProfile(req.charityId, parseInt(req.params.id));
-    return success(res, result);
-  } catch (err) {
-    return failure(res, err.message || "Failed to fetch applicant profile", err.status || 500);
-  }
-}
+export const getApplicantProfile = asyncHandler(async (req, res) => {
+  const result = await applicationService.getApplicantProfile(
+    req.charityId,
+    parseInt(req.params.id),
+  );
+  return success(res, result);
+});
 
-export async function declineApplication(req, res) {
-  try {
-    const charityId = req.charityId;
-    const { reason } = req.body;
-    const result = await applicationService.declineApplication(charityId, parseInt(req.params.id), { reason });
-    return success(res, result, "Application declined");
-  } catch (err) {
-    return failure(res, err.message || "Failed to decline application", err.status || 500);
-  }
-}
+export const declineApplication = asyncHandler(async (req, res) => {
+  const result = await applicationService.declineApplication(
+    req.charityId,
+    parseInt(req.params.id),
+    { reason: req.body.reason },
+  );
+  return success(res, result, "Application declined");
+});

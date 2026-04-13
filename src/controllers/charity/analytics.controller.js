@@ -1,11 +1,8 @@
-import { success, failure } from "../../utils/response.js";
+import { success } from "../../utils/response.js";
+import { asyncHandler } from "../../utils/asyncHandler.js";
 import { getAnalytics } from "../../services/charity/analytics.service.js";
 
-export async function getCharityAnalytics(req, res) {
-  try {
-    const result = await getAnalytics(req.charityId);
-    return success(res, result);
-  } catch (err) {
-    return failure(res, err.message || "Failed to fetch analytics", err.status || 500);
-  }
-}
+export const getCharityAnalytics = asyncHandler(async (req, res) => {
+  const result = await getAnalytics(req.charityId);
+  return success(res, result);
+});

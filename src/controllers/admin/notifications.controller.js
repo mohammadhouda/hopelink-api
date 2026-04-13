@@ -1,62 +1,35 @@
+import { success } from "../../utils/response.js";
+import { asyncHandler } from "../../utils/asyncHandler.js";
 import * as notificationService from "../../services/notification.service.js";
 
-export async function getNotifications(req, res) {
-  try {
-    const limit = parseInt(req.query.limit) || 20;
-    const offset = parseInt(req.query.offset) || 0;
-    const unreadOnly = req.query.unreadOnly === "true";
+export const getNotifications = asyncHandler(async (req, res) => {
+  const limit     = parseInt(req.query.limit)  || 20;
+  const offset    = parseInt(req.query.offset) || 0;
+  const unreadOnly = req.query.unreadOnly === "true";
+  const data = await notificationService.getNotifications(req.user.id, {
+    limit,
+    offset,
+    unreadOnly,
+  });
+  return success(res, data);
+});
 
-    const data = await notificationService.getNotifications(req.user.id, {
-      limit,
-      offset,
-      unreadOnly,
-    });
+export const getUnreadCount = asyncHandler(async (req, res) => {
+  const count = await notificationService.getUnreadCount(req.user.id);
+  return success(res, { unreadCount: count });
+});
 
-    res.json(data);
-  } catch (err) {
-    console.error("getNotifications error:", err);
-    res.status(500).json({ error: "Failed to fetch notifications" });
-  }
-}
+export const markAsRead = asyncHandler(async (req, res) => {
+  await notificationService.markAsRead(req.user.id, parseInt(req.params.id));
+  return success(res, null, "Marked as read");
+});
 
-export async function getUnreadCount(req, res) {
-  try {
-    const count = await notificationService.getUnreadCount(req.user.id);
-    res.json({ unreadCount: count });
-  } catch (err) {
-    console.error("getUnreadCount error:", err);
-    res.status(500).json({ error: "Failed to fetch unread count" });
-  }
-}
+export const markAllAsRead = asyncHandler(async (req, res) => {
+  await notificationService.markAllAsRead(req.user.id);
+  return success(res, null, "All notifications marked as read");
+});
 
-export async function markAsRead(req, res) {
-  try {
-    const id = parseInt(req.params.id);
-    await notificationService.markAsRead(req.user.id, id);
-    res.json({ message: "Marked as read" });
-  } catch (err) {
-    console.error("markAsRead error:", err);
-    res.status(500).json({ error: "Failed to mark notification as read" });
-  }
-}
-
-export async function markAllAsRead(req, res) {
-  try {
-    await notificationService.markAllAsRead(req.user.id);
-    res.json({ message: "All notifications marked as read" });
-  } catch (err) {
-    console.error("markAllAsRead error:", err);
-    res.status(500).json({ error: "Failed to mark all as read" });
-  }
-}
-
-export async function deleteNotification(req, res) {
-  try {
-    const id = parseInt(req.params.id);
-    await notificationService.deleteNotification(req.user.id, id);
-    res.json({ message: "Notification deleted" });
-  } catch (err) {
-    console.error("deleteNotification error:", err);
-    res.status(500).json({ error: "Failed to delete notification" });
-  }
-}
+export const deleteNotification = asyncHandler(async (req, res) => {
+  await notificationService.deleteNotification(req.user.id, parseInt(req.params.id));
+  return success(res, null, "Notification deleted");
+});

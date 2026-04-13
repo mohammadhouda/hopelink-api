@@ -1,3 +1,5 @@
+import { success } from "../../utils/response.js";
+import { asyncHandler } from "../../utils/asyncHandler.js";
 import {
   getRegistrationReport,
   getNgoReport,
@@ -6,52 +8,27 @@ import {
   getFilterOptions,
 } from "../../services/admin/reports.service.js";
 
-export const registrationReport = async (req, res) => {
-  try {
-    const data = await getRegistrationReport(req.query);
-    res.json(data);
-  } catch (error) {
-    console.error("Registration report error:", error);
-    res.status(500).json({ error: "Failed to generate registration report" });
-  }
-};
+export const registrationReport = asyncHandler(async (req, res) => {
+  const data = await getRegistrationReport(req.query);
+  return success(res, data);
+});
 
-export const ngoReport = async (req, res) => {
-  try {
-    const data = await getNgoReport(req.query);
-    res.json(data);
-  } catch (error) {
-    console.error("NGO report error:", error);
-    res.status(500).json({ error: "Failed to generate NGO report" });
-  }
-};
+export const ngoReport = asyncHandler(async (req, res) => {
+  const data = await getNgoReport(req.query);
+  return success(res, data);
+});
 
-export const userReport = async (req, res) => {
-  try {
-    const data = await getUserReport(req.query);
-    res.json(data);
-  } catch (error) {
-    console.error("User report error:", error);
-    res.status(500).json({ error: "Failed to generate user report" });
-  }
-};
+export const userReport = asyncHandler(async (req, res) => {
+  const data = await getUserReport(req.query);
+  return success(res, data);
+});
 
-export const projectReport = async (req, res) => {
-  try {
-    const data = await getProjectReport(req.query);
-    res.json(data);
-  } catch (error) {
-    console.error("Project report error:", error);
-    res.status(500).json({ error: "Failed to generate project report" });
-  }
-};
+export const projectReport = asyncHandler(async (req, res) => {
+  const data = await getProjectReport(req.query);
+  return success(res, data);
+});
 
-export const filterOptions = async (req, res) => {
-  try {
-    const data = await getFilterOptions();
-    res.json(data);
-  } catch (error) {
-    console.error("Filter options error:", error);
-    res.status(500).json({ error: "Failed to fetch filter options" });
-  }
-};
+export const filterOptions = asyncHandler(async (req, res) => {
+  const data = await getFilterOptions();
+  return success(res, data);
+});

@@ -1,90 +1,57 @@
-import {getUsersService, getUserService, getUserCitiesService, updateUserService, deleteUserService, createUserService} from "../../services/admin/users.service.js";
+import {
+  getUsersService,
+  getUserService,
+  getUserCitiesService,
+  updateUserService,
+  deleteUserService,
+  createUserService,
+} from "../../services/admin/users.service.js";
 import { success, failure } from "../../utils/response.js";
+import { asyncHandler } from "../../utils/asyncHandler.js";
 
-export async function getUsersController(req, res) {
-  try {
-    const { search, status, role, city, page = 1, limit = 10 } = req.query;
- 
-    const { users, total } = await getUsersService({
-      search,
-      status,
-      role,
-      city,
-      skip: (Number(page) - 1) * Number(limit),
-      take: Number(limit),
-    });
- 
-    if (total === 0) return failure(res, "No users found.", 200);
-    return success(res, { items: users, total }, "Users fetched successfully.", 200);
-  } catch (error) {
-    return failure(res, error.message);
+export const getUsersController = asyncHandler(async (req, res) => {
+  const { search, status, role, city, page = 1, limit = 10 } = req.query;
+  const { users, total } = await getUsersService({
+    search,
+    status,
+    role,
+    city,
+    skip: (Number(page) - 1) * Number(limit),
+    take: Number(limit),
+  });
+  if (total === 0) return failure(res, "No users found.", 200);
+  return success(res, { items: users, total }, "Users fetched successfully.", 200);
+});
+
+export const getUserCitiesController = asyncHandler(async (req, res) => {
+  const cities = await getUserCitiesService();
+  return success(res, cities, "Cities fetched successfully.", 200);
+});
+
+export const getUserController = asyncHandler(async (req, res) => {
+  const user = await getUserService(req.params.userId);
+  return success(res, user, "User fetched successfully.", 200);
+});
+
+export const updateUserController = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const updateData = req.body;
+  if (Object.keys(updateData).length === 0) {
+    return failure(res, "No data provided for update.", 400);
   }
-}
+  const updatedUser = await updateUserService(userId, updateData);
+  return success(res, updatedUser, "User updated successfully.", 200);
+});
 
-export async function getUserCitiesController(req, res) {
-  try {
-    const cities = await getUserCitiesService();
-    return success(res, cities, "Cities fetched successfully.", 200);
-  } catch (error) {
-    return failure(res, error.message);
-  }
-}
+export const deleteUserController = asyncHandler(async (req, res) => {
+  await deleteUserService(req.params.userId);
+  return success(res, null, `User with ID ${req.params.userId} deleted (soft delete).`, 200);
+});
 
-export async function getUserController(req, res) {
-  try {
-    const { userId } = req.params;
-    const user = await getUserService(userId);
-    return success(res, user, "User fetched successfully.", 200);
-  } catch (error) {
-    const status = error.message === "User not found." ? 404 : 500;
-    return failure(res, error.message, status);
-  }
-}
-
-export async function updateUserController(req, res) {
-    try {
-        const { userId } = req.params;
-        const updateData = req.body;
-
-        if (Object.keys(updateData).length === 0) {
-            return failure(res, "No data provided for update.", 400);
-        }
-
-        if (!userId) {
-            return failure(res, "User ID is required.", 400);
-        }
-
-        const updatedUser = await updateUserService(userId, updateData);
-
-        return success(res, updatedUser, "User updated successfully.", 200);
-    } catch (error) {
-        return failure(res, error.message);
-    }
-}
-
-export async function deleteUserController(req, res) {
-    try {
-        const { userId } = req.params;
-        if (!userId) {
-            return res.status(400).json({ message: "User ID is required." });
-        }
-
-        await deleteUserService(userId);
-
-        return success(res, null, `User with ID ${userId} deleted (soft delete).`, 200);
-    } catch (error) {
-        return failure(res, error.message);
-    }
-}
-
-export async function createUserController(req, res) {
-    try {
-        const { name, email, password, role, phone, avatarUrl, city, country, bio } = req.body;
-
-        const newUser = await createUserService({ name, email, password, role, phone, avatarUrl, city, country, bio });
-
-        return success(res, newUser, "User created successfully.", 201);
-    } catch (error) {
-        return failure(res, error.message);
-    }
-}
+export const createUserController = asyncHandler(async (req, res) => {
+  const { name, email, password, role, phone, avatarUrl, city, country, bio } = req.body;
+  const newUser = await createUserService({
+    name, email, password, role, phone, avatarUrl, city, country, bio,
+  });
+  return success(res, newUser, "User created successfully.", 201);
+});

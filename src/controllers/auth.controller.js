@@ -17,6 +17,21 @@ const COOKIE_OPTIONS = {
   sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
 };
 
+const ACCESS_TOKEN_TTL  = 20 * 60 * 1000;           // 20 minutes
+const REFRESH_TOKEN_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+function setAuthCookies(res, accessToken, refreshToken) {
+  res.cookie("access_token", accessToken, {
+    ...COOKIE_OPTIONS,
+    maxAge: ACCESS_TOKEN_TTL,
+  });
+  res.cookie("refresh_token", refreshToken, {
+    ...COOKIE_OPTIONS,
+    maxAge: REFRESH_TOKEN_TTL,
+    path: "/api/auth",
+  });
+}
+
 function getClientInfo(req) {
   const userAgent = req.headers["user-agent"] || "";
   return {
@@ -34,17 +49,7 @@ export async function registerController(req, res) {
       clientInfo,
     );
 
-    res.cookie("access_token", accessToken, {
-      ...COOKIE_OPTIONS,
-      maxAge: 20 * 60 * 1000,
-    });
-
-    res.cookie("refresh_token", refreshToken, {
-      ...COOKIE_OPTIONS,
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      path: "/api/auth",
-    });
-
+    setAuthCookies(res, accessToken, refreshToken);
     return success(res, user, "User registered successfully.", 201);
   } catch (err) {
     return failure(res, err.message, 400);
@@ -59,16 +64,7 @@ export async function loginController(req, res) {
       clientInfo,
     );
 
-    res.cookie("access_token", accessToken, {
-      ...COOKIE_OPTIONS,
-      maxAge: 20 * 60 * 1000,
-    });
-
-    res.cookie("refresh_token", refreshToken, {
-      ...COOKIE_OPTIONS,
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      path: "/api/auth",
-    });
+    setAuthCookies(res, accessToken, refreshToken);
 
     const response = { user };
     if (warning) response.warning = warning;
@@ -92,17 +88,7 @@ export async function refreshController(req, res) {
     const { accessToken, refreshToken: newRefreshToken } =
       await refreshTokenService(refreshToken, clientInfo);
 
-    res.cookie("access_token", accessToken, {
-      ...COOKIE_OPTIONS,
-      maxAge: 20 * 60 * 1000,
-    });
-
-    res.cookie("refresh_token", newRefreshToken, {
-      ...COOKIE_OPTIONS,
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      path: "/api/auth",
-    });
-
+    setAuthCookies(res, accessToken, newRefreshToken);
     return success(res, null, "Token refreshed successfully.", 200);
   } catch (err) {
     res.clearCookie("access_token");
