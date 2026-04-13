@@ -9,15 +9,25 @@ const OPPORTUNITY_INCLUDE = {
 
 export async function getOpportunities(userId, { page = 1, limit = 10, status, category, city, search } = {}) {
   const skip = (page - 1) * limit;
+  const normalizedSearch = search ? search.toLowerCase() : undefined;
+
+  // Check if the normalized search matches any City enum value exactly
+  const cityEnumMatch = normalizedSearch
+    ? ["BEIRUT","TRIPOLI","SIDON","TYRE","JOUNIEH","BYBLOS","ZAHLE","BAALBEK","NABATIEH","ALEY","CHOUF","METN","KESREWAN","AKKAR","OTHER"].find(
+        (c) => c.toLowerCase() === normalizedSearch
+      )
+    : undefined;
 
   const opportunityWhere = {
     status: status || "OPEN",
     ...(category && { charity: { category } }),
     ...(city     && { location: city }),
-    ...(search   && {
+    ...(normalizedSearch && {
       OR: [
-        { title:       { contains: search, mode: "insensitive" } },
-        { description: { contains: search, mode: "insensitive" } },
+        { title:       { contains: normalizedSearch, mode: "insensitive" } },
+        { description: { contains: normalizedSearch, mode: "insensitive" } },
+        { charity:     { name:    { contains: normalizedSearch, mode: "insensitive" } } },
+        ...(cityEnumMatch ? [{ location: cityEnumMatch }] : []),
       ],
     }),
   };
