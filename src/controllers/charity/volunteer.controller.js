@@ -5,8 +5,7 @@ import * as volunteerService from "../../services/charity/volunteer.service.js";
 export const getVolunteers = asyncHandler(async (req, res) => {
   const { opportunityId, search } = req.query;
   const result = await volunteerService.getVolunteers(req.charityId, {
-    page: req.pagination.page,
-    limit: req.pagination.limit,
+    ...req.pagination,
     opportunityId: opportunityId ? parseInt(opportunityId) : undefined,
     search,
   });
