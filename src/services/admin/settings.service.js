@@ -2,40 +2,58 @@ import crypto from "crypto";
 import * as auditService from "../audit.service.js";
 import prisma from "../../config/prisma.js";
 
+const PLATFORM_SCHEMA = {
+  siteName:                   { type: "string",  default: "Hope Link" },
+  tagline:                    { type: "string",  default: "" },
+  defaultLanguage:            { type: "string",  default: "en" },
+  logoUrl:                    { type: "string",  default: "" },
+  supportEmail:               { type: "string",  default: "" },
+  maxUploadSizeMb:            { type: "number",  default: 10 },
+  maintenanceMode:            { type: "boolean", default: false },
+};
+
+function castValue(raw, type) {
+  if (type === "boolean") return raw === "true";
+  if (type === "number")  return Number(raw);
+  return raw;
+}
+
 export async function getPlatformSettings() {
-  const rows = await prisma.platformSetting.findMany();
-  const settings = {};
-  for (const row of rows) {
-    if (row.value === "true" || row.value === "false") {
-      settings[row.key] = row.value === "true";
-    } else if (!isNaN(row.value) && row.value.trim() !== "") {
-      settings[row.key] = Number(row.value);
-    } else {
-      settings[row.key] = row.value;
-    }
-  }
-  return settings;
+  const rows = await prisma.platformSetting.findMany({
+    where: { key: { in: Object.keys(PLATFORM_SCHEMA) } },
+  });
+
+  const byKey = Object.fromEntries(rows.map((r) => [r.key, r.value]));
+
+  return Object.fromEntries(
+    Object.entries(PLATFORM_SCHEMA).map(([key, { type, default: def }]) => [
+      key,
+      key in byKey ? castValue(byKey[key], type) : def,
+    ]),
+  );
 }
 
 export async function updatePlatformSettings(data, { userId, ip }) {
-  const updates = [];
-  for (const [key, value] of Object.entries(data)) {
-    updates.push(
+  // Only process keys that exist in the schema
+  const allowed = Object.keys(PLATFORM_SCHEMA);
+  const entries = Object.entries(data).filter(([key]) => allowed.includes(key));
+
+  await prisma.$transaction(
+    entries.map(([key, value]) =>
       prisma.platformSetting.upsert({
-        where: { key },
+        where:  { key },
         update: { value: String(value) },
         create: { key, value: String(value) },
       }),
-    );
-  }
-  await prisma.$transaction(updates);
+    ),
+  );
 
   await auditService.log({
     userId,
     action: "updated",
     target: "Platform Settings",
     targetType: "settings",
-    details: `Updated keys: ${Object.keys(data).join(", ")}`,
+    details: `Updated keys: ${entries.map(([k]) => k).join(", ")}`,
     ipAddress: ip,
   });
 

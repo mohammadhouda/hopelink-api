@@ -66,7 +66,7 @@ export function registerRoomSocket(io) {
               message: "Access denied: this is not your opportunity",
             });
           }
-        } else if (user.role === "USER" || user.role === "VOLUNTEER") {
+        } else if (user.role === "USER") {
           // Volunteer must have an approved application for this specific opportunity
           const approvedApplication =
             await prisma.opportunityApplication.findUnique({

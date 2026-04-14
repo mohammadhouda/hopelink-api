@@ -17,7 +17,7 @@ export async function getUsersService({
     values.push(role);
     filters.push(`u."role" = $${values.length}::"Role"`);
   } else {
-    filters.push(`u."role" IN ('USER', 'VOLUNTEER')`);
+    filters.push(`u."role" = 'USER'::"Role"`);
   }
 
   // Status filter
@@ -27,7 +27,7 @@ export async function getUsersService({
   // City filter
   if (city && city !== "all") {
     values.push(city);
-    filters.push(`bp."city" = $${values.length}`);
+    filters.push(`bp."city" = $${values.length}::"City"`);
   }
 
   // tsvector search
@@ -103,7 +103,7 @@ export async function getUserService(userId) {
   const user = await prisma.user.findFirst({
     where: {
       id: Number(userId),
-      role: { in: ["USER", "VOLUNTEER"] },
+      role: "USER",
     },
     select: {
       id: true,
@@ -161,7 +161,7 @@ export async function getUserCitiesService() {
   const profiles = await prisma.baseProfile.findMany({
     where: {
       city: { not: null },
-      user: { role: { in: ["USER", "VOLUNTEER"] } },
+      user: { role: "USER" },
     },
     select: { city: true },
     distinct: ["city"],
@@ -203,12 +203,6 @@ export async function createUserService({
       },
     });
 
-    if (role === "VOLUNTEER") {
-      await tx.volunteerProfile.create({
-        data: { userId: user.id },
-      });
-    }
-
     return user;
   });
 }
@@ -218,7 +212,7 @@ export async function updateUserService(id, updateData) {
   const userId = Number(id);
 
   const user = await prisma.user.findFirst({
-    where: { id: userId, role: { in: ["USER", "VOLUNTEER"] } },
+    where: { id: userId, role: "USER" },
   });
   if (!user) throw new Error("User not found or inactive.");
 
@@ -270,7 +264,7 @@ export async function deleteUserService(userId) {
   return prisma.$transaction(async (tx) => {
     const id = Number(userId);
     const user = await tx.user.findFirst({
-      where: { id, role: { in: ["USER", "VOLUNTEER"] }, isActive: true },
+      where: { id, role: "USER", isActive: true },
     });
 
     if (!user) throw new Error("User not found or already disabled.");

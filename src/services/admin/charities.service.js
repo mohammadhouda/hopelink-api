@@ -33,7 +33,7 @@ export async function getCharitiesService({
   // City
   if (city && city !== "all") {
     values.push(city);
-    filters.push(`c."city" = $${values.length}`);
+    filters.push(`c."city" = $${values.length}::"City"`);
   }
 
   let searchQuery = "";

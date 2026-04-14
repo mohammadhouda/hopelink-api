@@ -339,7 +339,6 @@ enum Role {
   USER
   ADMIN
   CHARITY
-  VOLUNTEER
 }
 
 enum ProjectStatus {

@@ -4,7 +4,7 @@ export const createUserSchema = Joi.object({
   name: Joi.string().min(2).max(100).required(),
   email: Joi.string().email().required(),
   password: Joi.string().min(8).required(),
-  role: Joi.string().valid( 'USER', 'VOLUNTEER').required(),
+  role: Joi.string().valid('USER').required(),
 
   phone: Joi.string().optional().allow(null, ''),
   avatarUrl: Joi.string().uri().optional().allow(null, ''),

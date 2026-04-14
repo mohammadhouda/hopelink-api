@@ -1318,11 +1318,7 @@ async function main() {
 
   await prisma.auditLog.createMany({
     data: [
-      { userId: admin.id, action: "APPROVE_REGISTRATION", target: "Beit El Baraka", targetType: "RegistrationRequest", details: "Registration approved. Charity account created with temporary credentials.", ipAddress: "185.107.56.12" },
-      { userId: admin.id, action: "APPROVE_VERIFICATION", target: "Beit El Baraka", targetType: "VerificationRequest", details: "Verification approved. MOI certificate and financials confirmed.", ipAddress: "185.107.56.12" },
-      { userId: admin.id, action: "APPROVE_VERIFICATION", target: "Arcenciel", targetType: "VerificationRequest", details: "Verification approved. Full documentation package verified.", ipAddress: "185.107.56.12" },
-      { userId: admin.id, action: "DECLINE_REGISTRATION", target: "Quick Relief LB", targetType: "RegistrationRequest", details: "Declined — no MOI registration, no fund allocation documentation.", ipAddress: "185.107.56.12" },
-      { userId: admin.id, action: "UPDATE_SETTINGS", target: "platform_name", targetType: "PlatformSetting", details: "Changed platform name to Hope Link.", ipAddress: "185.107.56.12" },
+      { userId: admin.id, action: "updated", target: "platformSettings", targetType: "PlatformSetting", details: "Updated keys: siteName, tagline", ipAddress: "185.107.56.12" },
     ],
   });
 
