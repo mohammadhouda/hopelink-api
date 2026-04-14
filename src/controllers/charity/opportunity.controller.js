@@ -8,10 +8,10 @@ export const createOpportunity = asyncHandler(async (req, res) => {
 });
 
 export const getOpportunities = asyncHandler(async (req, res) => {
-  const { page, limit, status, projectId } = req.query;
+  const { status, projectId } = req.query;
   const result = await opportunityService.getOpportunities(req.charityId, {
-    page: parseInt(page) || 1,
-    limit: parseInt(limit) || 10,
+    page: req.pagination.page,
+    limit: req.pagination.limit,
     status,
     projectId: projectId ? parseInt(projectId) : undefined,
   });

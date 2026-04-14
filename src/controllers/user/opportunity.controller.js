@@ -3,10 +3,12 @@ import { asyncHandler } from "../../utils/asyncHandler.js";
 import * as opportunityService from "../../services/user/opportunity.service.js";
 
 export const getOpportunities = asyncHandler(async (req, res) => {
-  const { page, limit, status, category, city, search } = req.query;
+  const { status, category, city, search } = req.query;
   const result = await opportunityService.getOpportunities(req.user.id, {
-    page: parseInt(page) || 1,
-    limit: parseInt(limit) || 10,
+    skip: req.pagination.skip,
+    take: req.pagination.take,
+    page: req.pagination.page,
+    limit: req.pagination.limit,
     status,
     category,
     city,

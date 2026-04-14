@@ -31,13 +31,12 @@ export async function createPost(authorId, { content, imageUrl, postType, refId 
 }
 
 // ── Get feed (paginated, newest first)
-export async function getFeed({ page = 1, limit = 20, userId } = {}) {
-  const skip = (page - 1) * limit;
+export async function getFeed({ skip, take, page, limit, userId } = {}) {
 
   const [posts, total] = await Promise.all([
     prisma.post.findMany({
       skip,
-      take: limit,
+      take,
       orderBy: { createdAt: "desc" },
       include: {
         ...AUTHOR_INCLUDE,
@@ -111,17 +110,15 @@ export async function toggleLike(postId, userId) {
 }
 
 // ── Get comments for a post
-export async function getComments(postId, { page = 1, limit = 20 } = {}) {
+export async function getComments(postId, { skip, take, page, limit } = {}) {
   const post = await prisma.post.findUnique({ where: { id: postId }, select: { id: true } });
   if (!post) throw { status: 404, message: "Post not found" };
-
-  const skip = (page - 1) * limit;
 
   const [comments, total] = await Promise.all([
     prisma.postComment.findMany({
       where: { postId },
       skip,
-      take: limit,
+      take,
       orderBy: { createdAt: "asc" },
       include: {
         author: {

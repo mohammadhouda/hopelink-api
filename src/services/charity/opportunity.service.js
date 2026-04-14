@@ -38,8 +38,7 @@ export async function createOpportunity(charityId, data) {
   return opportunity;
 }
 
-export async function getOpportunities(charityId, { page = 1, limit = 10, status, projectId } = {}) {
-  const skip = (page - 1) * limit;
+export async function getOpportunities(charityId, { skip, take, page, limit, status, projectId } = {}) {
   const where = { charityId };
   if (status) where.status = status;
   if (projectId) where.projectId = projectId;
@@ -48,7 +47,7 @@ export async function getOpportunities(charityId, { page = 1, limit = 10, status
     prisma.volunteeringOpportunity.findMany({
       where,
       skip,
-      take: limit,
+      take,
       orderBy: { createdAt: "desc" },
       include: {
         project: { select: { id: true, title: true } },

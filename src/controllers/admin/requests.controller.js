@@ -17,11 +17,11 @@ import notificationEmitter, { NOTIFY_ADMINS } from "../../events/notificationEmi
 // ── Registration Requests ─────────────────────────────────────────────────────
 
 export const getRegistrationRequestsController = asyncHandler(async (req, res) => {
-  const { status, page = 1, limit = 10 } = req.query;
+  const { status } = req.query;
   const { items, total } = await getRegistrationRequestsService({
     status,
-    skip: (Number(page) - 1) * Number(limit),
-    take: Number(limit),
+    skip: req.pagination.skip,
+    take: req.pagination.take,
   });
   if (total === 0) return failure(res, "No registration requests found.", 200);
   return success(res, { items, total }, "Registration requests fetched.", 200);
@@ -75,11 +75,11 @@ export const declineRegistrationRequestController = asyncHandler(async (req, res
 // ── Verification Requests ─────────────────────────────────────────────────────
 
 export const getVerificationRequestsController = asyncHandler(async (req, res) => {
-  const { status, page = 1, limit = 10 } = req.query;
+  const { status } = req.query;
   const { items, total } = await getVerificationRequestsService({
     status,
-    skip: (Number(page) - 1) * Number(limit),
-    take: Number(limit),
+    skip: req.pagination.skip,
+    take: req.pagination.take,
   });
   if (total === 0) return failure(res, "No verification requests found.", 200);
   return success(res, { items, total }, "Verification requests fetched.", 200);

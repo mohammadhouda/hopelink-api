@@ -8,10 +8,9 @@ export const getProfile = asyncHandler(async (req, res) => {
 });
 
 export const getRatingsReceived = asyncHandler(async (req, res) => {
-  const { page, limit } = req.query;
   const data = await profileService.getRatingsReceived(req.user.id, {
-    page: parseInt(page) || 1,
-    limit: parseInt(limit) || 10,
+    page: req.pagination.page,
+    limit: req.pagination.limit,
   });
   return success(res, data);
 });

@@ -8,10 +8,9 @@ export const createPost = asyncHandler(async (req, res) => {
 });
 
 export const getFeed = asyncHandler(async (req, res) => {
-  const { page, limit } = req.query;
   const result = await postService.getFeed({
-    page: parseInt(page) || 1,
-    limit: parseInt(limit) || 20,
+    page: req.pagination.page,
+    limit: req.pagination.limit,
     userId: req.user.id,
   });
   return success(res, result);
@@ -33,10 +32,9 @@ export const toggleLike = asyncHandler(async (req, res) => {
 });
 
 export const getComments = asyncHandler(async (req, res) => {
-  const { page, limit } = req.query;
   const result = await postService.getComments(parseInt(req.params.id), {
-    page: parseInt(page) || 1,
-    limit: parseInt(limit) || 20,
+    page: req.pagination.page,
+    limit: req.pagination.limit,
   });
   return success(res, result);
 });

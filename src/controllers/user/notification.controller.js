@@ -3,12 +3,9 @@ import { asyncHandler } from "../../utils/asyncHandler.js";
 import * as notificationService from "../../services/notification.service.js";
 
 export const getNotifications = asyncHandler(async (req, res) => {
-  const { page, limit } = req.query;
-  const parsedLimit = parseInt(limit) || 15;
-  const parsedPage  = parseInt(page)  || 1;
   const result = await notificationService.getNotifications(req.user.id, {
-    limit:  parsedLimit,
-    offset: (parsedPage - 1) * parsedLimit,
+    limit: req.pagination.limit,
+    offset: req.pagination.skip,
   });
   return success(res, result);
 });

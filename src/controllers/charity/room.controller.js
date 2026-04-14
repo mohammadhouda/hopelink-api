@@ -16,11 +16,10 @@ export const getRoom = asyncHandler(async (req, res) => {
 });
 
 export const getRoomMessages = asyncHandler(async (req, res) => {
-  const { page, limit } = req.query;
   const result = await roomService.getRoomMessages(
     req.charityId,
     parseInt(req.params.opportunityId),
-    { page: parseInt(page) || 1, limit: parseInt(limit) || 50 },
+    { page: req.pagination.page, limit: req.pagination.limit },
   );
   return success(res, result);
 });

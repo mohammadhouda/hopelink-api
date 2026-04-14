@@ -3,10 +3,9 @@ import { asyncHandler } from "../../utils/asyncHandler.js";
 import * as certificateService from "../../services/user/certificate.service.js";
 
 export const getMyCertificates = asyncHandler(async (req, res) => {
-  const { page, limit } = req.query;
   const result = await certificateService.getMyCertificates(req.user.id, {
-    page:  parseInt(page)  || 1,
-    limit: parseInt(limit) || 10,
+    page: req.pagination.page,
+    limit: req.pagination.limit,
   });
   return success(res, result);
 });

@@ -41,15 +41,14 @@ export async function rateVolunteer(charityId, { volunteerId, opportunityId, rat
   return ratingRecord;
 }
 
-export async function getRatingsGiven(charityId, { page = 1, limit = 10, opportunityId } = {}) {
-  const skip = (page - 1) * limit;
+export async function getRatingsGiven(charityId, { skip, take, page, limit, opportunityId } = {}) {
   const where = { charityId, ...(opportunityId && { opportunityId }) };
 
   const [ratings, total] = await Promise.all([
     prisma.volunteerRating.findMany({
       where,
       skip,
-      take: limit,
+      take,
       orderBy: { createdAt: "desc" },
       include: {
         volunteer: { select: { id: true, name: true, email: true } },

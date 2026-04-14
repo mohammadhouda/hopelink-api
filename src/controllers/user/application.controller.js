@@ -3,10 +3,10 @@ import { asyncHandler } from "../../utils/asyncHandler.js";
 import * as applicationService from "../../services/user/application.service.js";
 
 export const getMyApplications = asyncHandler(async (req, res) => {
-  const { page, limit, status } = req.query;
+  const { status } = req.query;
   const result = await applicationService.getMyApplications(req.user.id, {
-    page: parseInt(page) || 1,
-    limit: parseInt(limit) || 10,
+    page: req.pagination.page,
+    limit: req.pagination.limit,
     status,
   });
   return success(res, result);

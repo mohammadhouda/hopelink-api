@@ -9,11 +9,12 @@ import {
   addComment,
   deleteComment,
 } from "../controllers/post.controller.js";
+import { parsePagination } from "../middlewares/parsePagination.js";
 
 const router = express.Router();
 
 // Feed
-router.get("/", getFeed);
+router.get("/", parsePagination(), getFeed);
 router.post("/", createPost);
 
 // Single post
@@ -24,7 +25,7 @@ router.delete("/:id", deletePost);
 router.post("/:id/like", toggleLike);
 
 // Comments
-router.get("/:id/comments", getComments);
+router.get("/:id/comments", parsePagination(), getComments);
 router.post("/:id/comments", addComment);
 router.delete("/:id/comments/:commentId", deleteComment);
 

@@ -125,15 +125,14 @@ export async function bulkIssueCertificates(charityId, opportunityId) {
   return { issued: results.length, certificates: results };
 }
 
-export async function getCertificatesIssued(charityId, { page = 1, limit = 10, opportunityId } = {}) {
-  const skip = (page - 1) * limit;
+export async function getCertificatesIssued(charityId, { skip, take, page, limit, opportunityId } = {}) {
   const where = { charityId, ...(opportunityId && { opportunityId }) };
 
   const [certificates, total] = await Promise.all([
     prisma.certificate.findMany({
       where,
       skip,
-      take: limit,
+      take,
       orderBy: { issuedAt: "desc" },
       include: {
         volunteer: { select: { id: true, name: true, email: true } },

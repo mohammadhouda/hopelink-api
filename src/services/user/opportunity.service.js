@@ -7,27 +7,17 @@ const OPPORTUNITY_INCLUDE = {
   _count:  { select: { applications: { where: { status: "APPROVED" } } } },
 };
 
-export async function getOpportunities(userId, { page = 1, limit = 10, status, category, city, search } = {}) {
-  const skip = (page - 1) * limit;
+export async function getOpportunities(userId, { skip, take, page, limit, status, category, city, search } = {}) {
   const normalizedSearch = search ? search.toLowerCase() : undefined;
-
-  // Check if the normalized search matches any City enum value exactly
-  const cityEnumMatch = normalizedSearch
-    ? ["BEIRUT","TRIPOLI","SIDON","TYRE","JOUNIEH","BYBLOS","ZAHLE","BAALBEK","NABATIEH","ALEY","CHOUF","METN","KESREWAN","AKKAR","OTHER"].find(
-        (c) => c.toLowerCase() === normalizedSearch
-      )
-    : undefined;
 
   const opportunityWhere = {
     status: status || "OPEN",
     ...(category && { charity: { category } }),
-    ...(city     && { location: city }),
     ...(normalizedSearch && {
       OR: [
         { title:       { contains: normalizedSearch, mode: "insensitive" } },
         { description: { contains: normalizedSearch, mode: "insensitive" } },
         { charity:     { name:    { contains: normalizedSearch, mode: "insensitive" } } },
-        ...(cityEnumMatch ? [{ location: cityEnumMatch }] : []),
       ],
     }),
   };
@@ -47,7 +37,7 @@ export async function getOpportunities(userId, { page = 1, limit = 10, status, c
         where:   scoreWhere,
         orderBy: [{ score: "desc" }, { opportunity: { createdAt: "desc" } }],
         skip,
-        take:    limit,
+        take,
         include: { opportunity: { include: OPPORTUNITY_INCLUDE } },
       }),
       prisma.volunteerMatchScore.count({ where: scoreWhere }),
@@ -66,7 +56,7 @@ export async function getOpportunities(userId, { page = 1, limit = 10, status, c
       prisma.volunteeringOpportunity.findMany({
         where:    opportunityWhere,
         skip,
-        take:     limit,
+        take,
         orderBy:  { createdAt: "desc" },
         include:  OPPORTUNITY_INCLUDE,
       }),

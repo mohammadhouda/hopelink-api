@@ -1,8 +1,7 @@
 import prisma from "../../config/prisma.js";
 import notificationEmitter, { NOTIFY_USER } from "../../events/notificationEmitter.js";
 
-export async function getApplications(charityId, { page = 1, limit = 10, status, opportunityId, from, to } = {}) {
-  const skip = (page - 1) * limit;
+export async function getApplications(charityId, { skip, take, page, limit, status, opportunityId, from, to } = {}) {
 
   const createdAtFilter = {};
   if (from) createdAtFilter.gte = new Date(from);
@@ -19,7 +18,7 @@ export async function getApplications(charityId, { page = 1, limit = 10, status,
     prisma.opportunityApplication.findMany({
       where,
       skip,
-      take: limit,
+      take,
       orderBy: { createdAt: "desc" },
       include: {
         user: {

@@ -8,6 +8,7 @@ import {
   deleteUserController,
 } from "../../controllers/admin/users.controller.js";
 import { validate } from "../../middlewares/validate.js";
+import { parsePagination } from "../../middlewares/parsePagination.js";
 import {
   createUserSchema,
   updateUserSchema,
@@ -16,7 +17,7 @@ import {
 
 const router = express.Router();
 
-router.get("/",        getUsersController);
+router.get("/",        parsePagination(), getUsersController);
 router.get("/cities",  getUserCitiesController);
 router.get(
   "/:userId",

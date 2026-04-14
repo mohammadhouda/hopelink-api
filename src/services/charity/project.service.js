@@ -21,10 +21,8 @@ export async function createProject(charityId, data) {
 
 export async function getProjects(
   charityId,
-  { page = 1, limit = 10, status, startFrom, startTo } = {},
+  { skip, take, page, limit, status, startFrom, startTo } = {}
 ) {
-  const skip = (page - 1) * limit;
-
   const startDateFilter = {};
   if (startFrom) startDateFilter.gte = new Date(startFrom);
   if (startTo) startDateFilter.lte = new Date(startTo);
@@ -39,7 +37,7 @@ export async function getProjects(
     prisma.charityProject.findMany({
       where,
       skip,
-      take: limit,
+      take,
       orderBy: { createdAt: "desc" },
     }),
     prisma.charityProject.count({ where }),

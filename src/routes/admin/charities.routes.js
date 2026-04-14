@@ -7,6 +7,7 @@ import {
   deleteCharityController,
 } from "../../controllers/admin/charities.controller.js";
 import { validate } from "../../middlewares/validate.js";
+import { parsePagination } from "../../middlewares/parsePagination.js";
 import {
   charityIdParamSchema,
   createCharitySchema,
@@ -15,7 +16,7 @@ import {
 
 const router = express.Router();
 
-router.get("/", getCharitiesController);
+router.get("/", parsePagination({ defaultLimit: 8 }), getCharitiesController);
 
 router.post("/", validate(createCharitySchema), createCharityController);
 router.get(

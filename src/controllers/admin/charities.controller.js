@@ -9,14 +9,14 @@ import { success, failure } from "../../utils/response.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 
 export const getCharitiesController = asyncHandler(async (req, res) => {
-  const { search, status, category, city, page = 1, limit = 8 } = req.query;
+  const { search, status, category, city } = req.query;
   const { charities, total } = await getCharitiesService({
     search,
     status,
     category,
     city,
-    skip: (Number(page) - 1) * Number(limit),
-    take: Number(limit),
+    skip: req.pagination.skip,
+    take: req.pagination.take,
   });
   if (total === 0) return failure(res, "No active charities found.", 200);
   return success(

@@ -66,7 +66,7 @@ export async function getRoom(userId, opportunityId) {
   return { ...room, myRole: membership.role };
 }
 
-export async function getRoomMessages(userId, opportunityId, { page = 1, limit = 50 } = {}) {
+export async function getRoomMessages(userId, opportunityId, { skip, take, page, limit } = {}) {
   const membership = await prisma.roomMember.findFirst({
     where: { userId, room: { opportunityId } },
   });
@@ -75,12 +75,11 @@ export async function getRoomMessages(userId, opportunityId, { page = 1, limit =
   const room = await prisma.volunteerRoom.findUnique({ where: { opportunityId } });
   if (!room) throw { status: 404, message: "Room not found" };
 
-  const skip = (page - 1) * limit;
   const [messages, total] = await Promise.all([
     prisma.roomMessage.findMany({
       where: { roomId: room.id },
       skip,
-      take: limit,
+      take,
       orderBy: { createdAt: "desc" },
       include: {
         sender: {

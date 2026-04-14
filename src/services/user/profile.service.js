@@ -46,8 +46,7 @@ export async function getProfile(userId) {
   return user;
 }
 
-export async function getRatingsReceived(userId, { page = 1, limit = 10 } = {}) {
-  const skip = (page - 1) * limit;
+export async function getRatingsReceived(userId, { skip, take, page, limit } = {}) {
 
   const where = { volunteerId: userId };
 
@@ -55,7 +54,7 @@ export async function getRatingsReceived(userId, { page = 1, limit = 10 } = {}) 
     prisma.volunteerRating.findMany({
       where,
       skip,
-      take: limit,
+      take,
       orderBy: { createdAt: "desc" },
       include: {
         charity: {

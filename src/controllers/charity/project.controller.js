@@ -8,10 +8,10 @@ export const createProject = asyncHandler(async (req, res) => {
 });
 
 export const getProjects = asyncHandler(async (req, res) => {
-  const { page, limit, status, startFrom, startTo } = req.query;
+  const { status, startFrom, startTo } = req.query;
   const result = await projectService.getProjects(req.charityId, {
-    page: parseInt(page) || 1,
-    limit: parseInt(limit) || 10,
+    page: req.pagination.page,
+    limit: req.pagination.limit,
     status,
     startFrom,
     startTo,

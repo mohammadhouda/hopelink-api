@@ -14,10 +14,10 @@ export const rateVolunteer = asyncHandler(async (req, res) => {
 });
 
 export const getRatingsGiven = asyncHandler(async (req, res) => {
-  const { page, limit, opportunityId } = req.query;
+  const { opportunityId } = req.query;
   const result = await ratingService.getRatingsGiven(req.charityId, {
-    page:          parseInt(page) || 1,
-    limit:         parseInt(limit) || 10,
+    page: req.pagination.page,
+    limit: req.pagination.limit,
     opportunityId: opportunityId ? parseInt(opportunityId) : undefined,
   });
   return success(res, result);

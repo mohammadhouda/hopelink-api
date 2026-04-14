@@ -1,13 +1,12 @@
 import prisma from "../../config/prisma.js";
 
-export async function getMyCertificates(userId, { page = 1, limit = 10 } = {}) {
-  const skip = (page - 1) * limit;
+export async function getMyCertificates(userId, { skip, take, page, limit } = {}) {
 
   const [certificates, total] = await Promise.all([
     prisma.certificate.findMany({
       where: { volunteerId: userId },
       skip,
-      take: limit,
+      take,
       orderBy: { issuedAt: "desc" },
       include: {
         opportunity: { select: { id: true, title: true, startDate: true, endDate: true } },

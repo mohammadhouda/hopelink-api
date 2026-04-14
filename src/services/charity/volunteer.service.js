@@ -6,10 +6,8 @@ const FROM = process.env.FROM_EMAIL || "onboarding@resend.dev";
 
 export async function getVolunteers(
   charityId,
-  { page = 1, limit = 10, opportunityId, search } = {},
+  { skip, take, page, limit, opportunityId, search } = {}
 ) {
-  const skip = (page - 1) * limit;
-
   const where = {
     status: "APPROVED",
     opportunity: {
@@ -73,7 +71,7 @@ export async function getVolunteers(
   const total = allVolunteers.length;
 
   // Paginate after grouping
-  const volunteers = allVolunteers.slice(skip, skip + limit);
+  const volunteers = allVolunteers.slice(skip, skip + take);
 
   return { volunteers, total, page, limit };
 }

@@ -21,10 +21,10 @@ export const bulkIssueCertificates = asyncHandler(async (req, res) => {
 });
 
 export const getCertificatesIssued = asyncHandler(async (req, res) => {
-  const { page, limit, opportunityId } = req.query;
+  const { opportunityId } = req.query;
   const result = await certService.getCertificatesIssued(req.charityId, {
-    page:          parseInt(page) || 1,
-    limit:         parseInt(limit) || 10,
+    page: req.pagination.page,
+    limit: req.pagination.limit,
     opportunityId: opportunityId ? parseInt(opportunityId) : undefined,
   });
   return success(res, result);

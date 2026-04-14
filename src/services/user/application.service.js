@@ -1,15 +1,14 @@
 import prisma from "../../config/prisma.js";
 import notificationEmitter, { NOTIFY_CHARITY } from "../../events/notificationEmitter.js";
 
-export async function getMyApplications(userId, { page = 1, limit = 10, status } = {}) {
-  const skip = (page - 1) * limit;
+export async function getMyApplications(userId, { skip, take, page, limit, status } = {}) {
   const where = { userId, ...(status && { status }) };
 
   const [applications, total] = await Promise.all([
     prisma.opportunityApplication.findMany({
       where,
       skip,
-      take: limit,
+      take,
       orderBy: { createdAt: "desc" },
       include: {
         opportunity: {

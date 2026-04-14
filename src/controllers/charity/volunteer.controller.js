@@ -3,10 +3,10 @@ import { asyncHandler } from "../../utils/asyncHandler.js";
 import * as volunteerService from "../../services/charity/volunteer.service.js";
 
 export const getVolunteers = asyncHandler(async (req, res) => {
-  const { page, limit, opportunityId, search } = req.query;
+  const { opportunityId, search } = req.query;
   const result = await volunteerService.getVolunteers(req.charityId, {
-    page:          parseInt(page) || 1,
-    limit:         parseInt(limit) || 10,
+    page: req.pagination.page,
+    limit: req.pagination.limit,
     opportunityId: opportunityId ? parseInt(opportunityId) : undefined,
     search,
   });

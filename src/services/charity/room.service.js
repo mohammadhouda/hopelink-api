@@ -54,7 +54,7 @@ export async function getRoomByOpportunity(charityId, opportunityId) {
 export async function getRoomMessages(
   charityId,
   opportunityId,
-  { page = 1, limit = 50 } = {},
+  { skip, take, page, limit } = {},
 ) {
   const opportunity = await prisma.volunteeringOpportunity.findFirst({
     where: { id: opportunityId, charityId },
@@ -66,13 +66,11 @@ export async function getRoomMessages(
   });
   if (!room) throw { status: 404, message: "Room not found" };
 
-  const skip = (page - 1) * limit;
-
   const [messages, total] = await Promise.all([
     prisma.roomMessage.findMany({
       where: { roomId: room.id },
       skip,
-      take: limit,
+      take,
       orderBy: { createdAt: "desc" },
       include: {
         sender: {

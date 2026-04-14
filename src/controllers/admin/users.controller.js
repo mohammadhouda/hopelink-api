@@ -10,14 +10,14 @@ import { success, failure } from "../../utils/response.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 
 export const getUsersController = asyncHandler(async (req, res) => {
-  const { search, status, role, city, page = 1, limit = 10 } = req.query;
+  const { search, status, role, city } = req.query;
   const { users, total } = await getUsersService({
     search,
     status,
     role,
     city,
-    skip: (Number(page) - 1) * Number(limit),
-    take: Number(limit),
+    skip: req.pagination.skip,
+    take: req.pagination.take,
   });
   if (total === 0) return failure(res, "No users found.", 200);
   return success(res, { items: users, total }, "Users fetched successfully.", 200);
