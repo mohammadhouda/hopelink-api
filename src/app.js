@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import helmet from "helmet";
 
 import authRoutes from "./routes/auth.routes.js";
+import publicRoutes from "./routes/public.routes.js";
 import uploadRouter from "./routes/upload.routes.js";
 import adminRoutes from "./routes/admin/index.js";
 import charityRoutes from "./routes/charity/index.js";
@@ -31,6 +32,9 @@ app.options("*", cors());
 app.use(cookieParser());
 app.use(express.json());
 app.use(helmet());
+
+// ── Public routes (no auth)
+app.use("/api/public", publicRoutes);
 
 // ── Shared routes
 app.use("/api/auth", authRoutes);
