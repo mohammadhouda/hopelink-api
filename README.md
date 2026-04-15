@@ -109,6 +109,12 @@ Each login creates a refresh token "family". On every refresh, the old token is 
 **Two-hop aggregation problem**
 Prisma's `_count` can't span two relations (`Project → Opportunity → Application`). Project-level application counts are computed with a raw `LEFT JOIN` query and shared via a utility function used by both the charity and admin portals — avoiding duplicated raw SQL.
 
+**PostgreSQL enum casts in raw queries**
+Prisma's `$queryRawUnsafe` does not infer the type of `$N` placeholders. Columns typed as custom PostgreSQL enums (`City`, `Category`, `Role`) require explicit casts: `$1::"City"`, `$2::"Category"`. Missing casts produce `operator does not exist: "City" = text` errors at runtime.
+
+**`PLATFORM_SCHEMA` for settings**
+Platform settings are stored as key-value rows. The `getPlatformSettings` / `updatePlatformSettings` services filter through a canonical `PLATFORM_SCHEMA` object that defines the expected keys and their types/defaults. This prevents stale rows with old naming conventions from leaking into the response and keeps the API surface stable regardless of what's in the database.
+
 ---
 
 ## Architecture
@@ -122,14 +128,15 @@ All three portals share one server. Role middleware enforces access at the route
                               │          │
           ┌───────────────────┼──────────┼──────────────────┐
           │                   │          │                   │
-     /api/auth           /api/admin  /api/charity       /api/user
-     Public              ADMIN role  CHARITY role        USER role
-                              │          │                   │
-                     platform config   opportunities     match-ranked feed
-                     user management   applications      volunteer rooms
-                     charity review    ratings           certificates
-                     audit logs        analytics         profile & prefs
-                     reports
+     /api/public         /api/admin  /api/charity       /api/user
+     No auth             ADMIN role  CHARITY role        USER role
+     stats, NGO          platform    opportunities      match-ranked feed
+     registration        config      applications       volunteer rooms
+                         user mgmt   ratings            certificates
+                         charity     analytics          profile & prefs
+                         review
+                         audit logs
+                         reports
 
                      ┌──────────────────────────────────────┐
                      │  BullMQ Worker  (concurrency: 5)      │
@@ -138,7 +145,7 @@ All three portals share one server. Role middleware enforces access at the route
                      └──────────────────────────────────────┘
 ```
 
-Every request: **JWT middleware → role check → controller → service → Prisma**
+Every protected request: **JWT middleware → role check → controller → service → Prisma**
 
 ---
 
@@ -176,6 +183,7 @@ hopelink-api/
     │   └── rateLimiter.js      # Brute-force protection on auth routes
     │
     ├── routes/
+    │   ├── public.routes.js    # /api/public — no auth (stats, NGO registration)
     │   ├── auth.routes.js
     │   ├── upload.routes.js
     │   ├── post.routes.js      # Community feed (shared USER + CHARITY)
@@ -243,7 +251,7 @@ Attached to any route that accepts `?page=` and `?limit=` query parameters. Pars
 // Route
 router.get("/", parsePagination({ defaultLimit: 10, maxLimit: 100 }), listOpportunities);
 
-// Controller
+// Controller / Service — spread the full object
 const { page, limit, skip, take } = req.pagination;
 ```
 
@@ -255,6 +263,19 @@ const { page, limit, skip, take } = req.pagination;
 | `limit` | Parsed limit, clamped to `[1, maxLimit]` |
 | `skip` | `(page - 1) * limit` — Prisma `skip` |
 | `take` | Same as `limit` — Prisma `take` |
+
+Controllers and services must spread `...req.pagination` (or destructure all four fields) when passing it down. Passing only `page` and `limit` causes `skip` and `take` to be `undefined`, which silently returns empty arrays from any service that uses `Array.prototype.slice(skip, skip + take)`.
+
+---
+
+## Public API
+
+Routes under `/api/public` require no authentication and are mounted before the JWT middleware:
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/public/stats` | Returns `{ volunteers, charities, opportunities }` live counts for the landing page |
+| `POST` | `/api/public/registration` | Submits an NGO registration request; emits an in-app notification to all admins |
 
 ---
 
@@ -287,6 +308,8 @@ All three auth paths (login, register, refresh) write cookies through a single `
 
 All responses use a consistent envelope: `{ success, message, data }`.
 
+**Public** (`/api/public` — no auth): platform stats, NGO registration request submission
+
 **Auth** (`/api/auth` — public): register, login, logout, silent refresh, session management
 
 **Admin** (`/api/admin` — ADMIN role): dashboard stats, full user and charity management, registration and verification request review, reports, platform settings, audit log, API key management
@@ -294,7 +317,6 @@ All responses use a consistent envelope: `{ success, message, data }`.
 **Charity** (`/api/charity` — CHARITY role): profile, project and opportunity CRUD, application review (approve/decline), volunteer ratings, bulk certificate issuance, analytics dashboard, volunteer roster, real-time room management
 
 **User** (`/api/user` — USER role): match-ranked opportunity feed with filters, application management, volunteer rooms, certificates, experience history, volunteering preferences, notifications, community feed
-
 
 ---
 
@@ -338,7 +360,7 @@ const socket = io("http://localhost:5000", { auth: { token: "jwt-access-token" }
 ## Data Models
 
 ```
-User
+User  (role: USER | ADMIN | CHARITY)
  ├── BaseProfile           phone, avatar, city (City enum), bio
  ├── VolunteerProfile      availability, experience, isVerified
  │    ├── VolunteerSkill[]
@@ -366,6 +388,8 @@ User
 ```
 
 **Opportunity lifecycle:** `OPEN` → `FULL` (auto when approved = maxSlots) → `ENDED` or `CANCELLED`
+
+**Role enum:** `USER` · `ADMIN` · `CHARITY` — the `VOLUNTEER` role was removed; the volunteer identity is expressed through `VolunteerProfile` (a separate table linked to `User`) rather than a role value. This keeps the role enum as a portal-access concept only.
 
 **Enums:**
 - Category: `EDUCATION` · `HEALTH` · `ENVIRONMENT` · `ANIMAL_WELFARE` · `SOCIAL` · `OTHER`
