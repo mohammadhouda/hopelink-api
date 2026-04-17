@@ -92,7 +92,7 @@ export async function loginService({ email, password }, clientInfo) {
         success: false,
         reason: "account_locked"
       });
-      throw new Error(`Too many failed attempts. Try again in ${lockoutStatus.remainingMinutes} minutes`);
+      throw new Error(`Account locked. Try again in ${lockoutStatus.remainingMinutes} minutes`);
     }
   }
 
