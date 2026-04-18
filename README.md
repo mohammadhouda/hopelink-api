@@ -401,9 +401,9 @@ User  (role: USER | ADMIN | CHARITY)
 
 | Layer | Technology |
 |---|---|
-| Runtime | Node.js 18+ (ES Modules) |
+| Runtime | Node.js 22 (ES Modules) |
 | Framework | Express 4 |
-| Database | PostgreSQL |
+| Database | PostgreSQL 16 |
 | ORM | Prisma 5 |
 | Real-time | Socket.io 4 |
 | Auth | JWT (access + refresh tokens with rotation) |
@@ -413,20 +413,80 @@ User  (role: USER | ADMIN | CHARITY)
 | Email | Resend |
 | Validation | Joi |
 | Security | Helmet, express-rate-limit, bcrypt |
+| Containerisation | Docker + Docker Compose |
 
 ---
 
 ## Getting Started
 
-### Prerequisites
+Two options: **Docker** (recommended — zero local setup) or **manual**.
 
-- Node.js >= 18
-- PostgreSQL
-- Upstash Redis instance
-- Supabase project (file storage)
-- Resend account (email)
+---
 
-### Installation
+### Option A — Docker
+
+**Prerequisites:** [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+
+**1. Create a `.env` file** in the project root with your external service credentials:
+
+```env
+JWT_SECRET_KEY=your-long-random-secret
+
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+RESEND_API_KEY=re_xxxxxxxxxxxx
+
+# Upstash Redis (used by BullMQ worker)
+UPSTASH_REDIS_REST_URL=https://your-instance.upstash.io
+UPSTASH_REDIS_REST_TOKEN=your-token
+REDIS_URL=rediss://default:TOKEN@your-instance.upstash.io:6379
+```
+
+PostgreSQL and local Redis are provided by Docker Compose — no local installs needed.
+
+**2. Build and start all services:**
+
+```bash
+docker compose up --build
+```
+
+This starts three containers:
+
+| Container | Purpose | Port |
+|---|---|---|
+| `postgres` | PostgreSQL 16 database | 5432 |
+| `redis` | Redis 7 (for local queue testing) | 6379 |
+| `api` | hopelink-api (runs migrations on boot) | 5000 |
+
+On first boot the api container automatically runs `prisma migrate deploy` before starting the server.
+
+**3. Seed the database** (in a second terminal, while the containers are running):
+
+```bash
+docker compose exec api node prisma/seed.js
+```
+
+This loads Lebanese mock data: 6 volunteers, 5 charities, 9 opportunities.
+
+**Common commands:**
+
+```bash
+docker compose up -d              # start in background
+docker compose logs -f api        # tail api logs
+docker compose down               # stop containers (data volumes survive)
+docker compose down -v            # stop + wipe volumes (resets the database)
+docker compose up --build api     # rebuild after code changes
+docker compose exec api sh        # open a shell inside the api container
+```
+
+---
+
+### Option B — Manual
+
+**Prerequisites:** Node.js >= 22, PostgreSQL, an Upstash Redis instance, Supabase project, Resend account.
+
+**1. Install dependencies:**
 
 ```bash
 git clone <repository-url>
@@ -434,25 +494,24 @@ cd hopelink-api
 npm install
 ```
 
-### Environment Variables
+**2. Create a `.env` file:**
 
 ```env
 PORT=5000
 NODE_ENV=development
-ORIGIN_URL=http://localhost:3000
 
-DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/hopelink
+DATABASE_URL=postgresql://USER:PASSWORD@localhost:5432/hopelink
 
 JWT_SECRET_KEY=your-long-random-secret
 
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-SUPABASE_ANON_KEY=your-anon-key
 
 RESEND_API_KEY=re_xxxxxxxxxxxx
-FROM_EMAIL=onboarding@resend.dev
 
-REDIS_URL=rediss://default:PASSWORD@HOST.upstash.io:6379
+UPSTASH_REDIS_REST_URL=https://your-instance.upstash.io
+UPSTASH_REDIS_REST_TOKEN=your-token
+REDIS_URL=rediss://default:TOKEN@your-instance.upstash.io:6379
 
 # Optional overrides
 RATE_LIMIT_MAX_ATTEMPTS=10
@@ -462,17 +521,17 @@ REFRESH_TOKEN_EXPIRY_DAYS=7
 MAX_SESSIONS_PER_USER=5
 ```
 
-### Database Setup
+**3. Set up the database:**
 
 ```bash
 npx prisma migrate deploy
 npm run seed          # Lebanese mock data: 6 volunteers, 5 charities, 9 opportunities
-npx prisma studio     # Optional browser
+npx prisma studio     # Optional: browser-based DB viewer
 ```
 
-### Run
+**4. Run:**
 
 ```bash
-npm run dev    # nodemon
+npm run dev    # nodemon (auto-restart on file changes)
 npm start      # production
 ```

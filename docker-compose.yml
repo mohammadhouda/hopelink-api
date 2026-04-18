@@ -1,0 +1,56 @@
+services:
+
+  # ── PostgreSQL ──────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: hopelink
+      POSTGRES_PASSWORD: hopelink_pass
+      POSTGRES_DB: hopelink
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  # ── Redis ───────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+
+  # ── hopelink-api ────────────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - "5000:5000"
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+
+      # Prisma / PostgreSQL
+      DATABASE_URL: postgresql://hopelink:hopelink_pass@postgres:5432/hopelink
+
+      # JWT
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+
+      # Third-party API keys
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      UPSTASH_REDIS_REST_URL: ${UPSTASH_REDIS_REST_URL}
+      UPSTASH_REDIS_REST_TOKEN: ${UPSTASH_REDIS_REST_TOKEN}
+      REDIS_URL: ${REDIS_URL}
+
+volumes:
+  postgres_data:
+  redis_data:

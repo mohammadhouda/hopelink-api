@@ -1,11 +1,12 @@
 import express from "express";
 import * as ctrl from "../../controllers/user/profile.controller.js";
 import * as expCtrl from "../../controllers/user/experience.controller.js";
+import { parsePagination } from "../../middlewares/parsePagination.js";
 
 const router = express.Router();
 
 router.get("/", ctrl.getProfile);
-router.get("/ratings", ctrl.getRatingsReceived);
+router.get("/ratings", parsePagination(), ctrl.getRatingsReceived);
 router.patch("/", ctrl.updateProfile);
 router.patch("/skills", ctrl.updateSkills);
 router.patch("/preferences", ctrl.updatePreferences);
