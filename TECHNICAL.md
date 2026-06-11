@@ -1,4 +1,4 @@
-# Hope Link API — Technical Reference
+# Hope Link API - Technical Reference
 
 For the non-technical overview and setup instructions, see [README.md](README.md).
 
@@ -107,10 +107,10 @@ hopelink-api/
     │   └── supabase.config.js  # Supabase storage client
     │
     ├── jobs/
-    │   ├── matchScoreQueue.js      # BullMQ Queue — publishes score:volunteer / score:opportunity
-    │   ├── matchScoreWorker.js     # BullMQ Worker — batch-upserts VolunteerMatchScore rows
+    │   ├── matchScoreQueue.js      # BullMQ Queue publishes score:volunteer / score:opportunity
+    │   ├── matchScoreWorker.js     # BullMQ Worker batch-upserts VolunteerMatchScore rows
     │   ├── scoreOpportunity.js     # Pure scoring function (skills, days, category, city weights)
-    │   └── backfillScores.js       # One-time script — enqueues score:volunteer for all volunteers
+    │   └── backfillScores.js       # One-time script enqueues score:volunteer for all volunteers
     │
     ├── middlewares/
     │   ├── auth.js             # JWT validation
@@ -121,7 +121,7 @@ hopelink-api/
     │   └── rateLimiter.js      # Brute-force protection on auth routes
     │
     ├── routes/
-    │   ├── public.routes.js    # /api/public — no auth (stats, NGO registration)
+    │   ├── public.routes.js    # /api/public no auth (stats, NGO registration)
     │   ├── auth.routes.js
     │   ├── upload.routes.js
     │   ├── post.routes.js      # Community feed (shared USER + CHARITY)
@@ -130,7 +130,7 @@ hopelink-api/
     │   └── user/
     │
     ├── controllers/            # Thin wrappers: parse request, call service, return response
-    │                           # All handlers are wrapped with asyncHandler — no try/catch boilerplate
+    │                           # All handlers are wrapped with asyncHandler no try/catch boilerplate
     ├── services/               # All business logic lives here
     │
     ├── events/
@@ -141,7 +141,7 @@ hopelink-api/
     │
     ├── utils/
     │   ├── response.js         # Standardized { success, message, data } envelope
-    │   ├── asyncHandler.js     # Wraps controller fns — catches thrown errors automatically
+    │   ├── asyncHandler.js     # Wraps controller fns catches thrown errors automatically
     │   ├── security.js         # IP parsing, token hashing
     │   └── generateToken.js    # JWT + refresh token generation
     │
@@ -155,7 +155,7 @@ hopelink-api/
 
 ### Personalized Opportunity Ranking at Scale
 
-Volunteers see opportunities ordered by match score — computed from skills overlap, preferred city, preferred category, and availability days. The straightforward implementation breaks quickly.
+Volunteers see opportunities ordered by match score computed from skills overlap, preferred city, preferred category, and availability days. The straightforward implementation breaks quickly.
 
 **The naive approach:**
 ```js
@@ -166,9 +166,9 @@ scored.sort((a, b) => b.matchScore - a.matchScore);
 return scored.slice(skip, skip + limit);
 ```
 
-This works at 50 rows. At 10,000+ it fetches the full table on every page load — unbounded memory, unbounded latency, no pagination safety.
+This works at 50 rows. At 10,000+ it fetches the full table on every page load unbounded memory, unbounded latency, no pagination safety.
 
-**The solution — precomputed scores, background jobs, indexed reads:**
+**The solution precomputed scores, background jobs, indexed reads:**
 
 Scores are stored in a dedicated junction table written by a background worker:
 
@@ -183,7 +183,7 @@ VolunteerMatchScore
   @@index([volunteerId, score(sort: Desc)])   ← ORDER BY score becomes a B-tree scan
 ```
 
-At query time the endpoint does a single indexed lookup — no scoring, no table scan:
+At query time the endpoint does a single indexed lookup no scoring, no table scan:
 
 ```js
 // Page 2 is as fast as page 1
@@ -200,8 +200,8 @@ prisma.volunteerMatchScore.findMany({
 
 | Trigger | Job |
 |---|---|
-| Volunteer updates profile, skills, or preferences | `score:volunteer` — re-scores all OPEN opportunities for that volunteer |
-| Charity creates or reopens an opportunity | `score:opportunity` — scores all volunteers against that opportunity |
+| Volunteer updates profile, skills, or preferences | `score:volunteer` re-scores all OPEN opportunities for that volunteer |
+| Charity creates or reopens an opportunity | `score:opportunity` scores all volunteers against that opportunity |
 | Platform backfill (one-time script) | `score:volunteer` enqueued for every existing volunteer |
 
 **Fallback:** Volunteers with no profile data skip the scoring pipeline entirely. The endpoint falls back to `createdAt DESC` pagination and returns `hasScores: false` so the frontend suppresses the match badge UI.
@@ -214,10 +214,10 @@ prisma.volunteerMatchScore.findMany({
 Scoring inline on write (e.g. on profile save) is synchronous and blocks the response. With 10,000+ opportunities per volunteer, that's an unbounded synchronous operation. Moving it to a queue decouples write latency from scoring cost entirely.
 
 **Why Upstash Redis specifically?**
-Upstash is serverless and TLS-enabled out of the box. BullMQ v5 requires raw ioredis connection options (not a shared ioredis instance) — the `REDIS_URL` is parsed into a connection config object so the Queue and Worker each create their own dedicated connections, which is the correct pattern for BullMQ.
+Upstash is serverless and TLS-enabled out of the box. BullMQ v5 requires raw ioredis connection options (not a shared ioredis instance) the `REDIS_URL` is parsed into a connection config object so the Queue and Worker each create their own dedicated connections, which is the correct pattern for BullMQ.
 
 **Freshness vs. performance tradeoff**
-Scores are eventually consistent — there's a short window between a profile save and the worker completing where the old scores are still served. This is an intentional tradeoff: the alternative (synchronous scoring) makes every profile update proportionally slower as the opportunity count grows. For a volunteering platform, stale-by-seconds ranking is acceptable.
+Scores are eventually consistent there's a short window between a profile save and the worker completing where the old scores are still served. This is an intentional tradeoff: the alternative (synchronous scoring) makes every profile update proportionally slower as the opportunity count grows. For a volunteering platform, stale-by-seconds ranking is acceptable.
 
 **Idempotent writes**
 The worker uses `INSERT ... ON CONFLICT DO UPDATE` so jobs can be retried safely without producing duplicate rows or corrupting existing scores:
@@ -238,10 +238,10 @@ Jobs use a stable `jobId` (`volunteer-{id}`) so rapid profile saves within a sho
 After scoring, the `score:volunteer` job deletes rows for opportunities no longer in `OPEN` status, keeping the table lean and avoiding stale scores from surfacing in ranked results.
 
 **Family-based token rotation**
-Each login creates a refresh token "family". On every refresh, the old token is revoked and a new pair issued within the same family. If a revoked token is reused — indicating theft — the entire family is immediately invalidated, logging out every device in that session.
+Each login creates a refresh token "family". On every refresh, the old token is revoked and a new pair issued within the same family. If a revoked token is reused indicating theft the entire family is immediately invalidated, logging out every device in that session.
 
 **Two-hop aggregation problem**
-Prisma's `_count` can't span two relations (`Project → Opportunity → Application`). Project-level application counts are computed with a raw `LEFT JOIN` query and shared via a utility function used by both the charity and admin portals — avoiding duplicated raw SQL.
+Prisma's `_count` can't span two relations (`Project → Opportunity → Application`). Project-level application counts are computed with a raw `LEFT JOIN` query and shared via a utility function used by both the charity and admin portals avoiding duplicated raw SQL.
 
 **PostgreSQL enum casts in raw queries**
 Prisma's `$queryRawUnsafe` does not infer the type of `$N` placeholders. Columns typed as custom PostgreSQL enums (`City`, `Category`, `Role`) require explicit casts: `$1::"City"`, `$2::"Category"`. Missing casts produce `operator does not exist: "City" = text` errors at runtime.
@@ -255,7 +255,7 @@ Platform settings are stored as key-value rows. The `getPlatformSettings` / `upd
 
 ### `asyncHandler`
 
-Every controller function is wrapped with `asyncHandler` from `src/utils/asyncHandler.js`. This eliminates per-handler `try/catch` boilerplate — services throw `{ status, message }` objects and the wrapper normalizes them into the standard error envelope automatically.
+Every controller function is wrapped with `asyncHandler` from `src/utils/asyncHandler.js`. This eliminates per-handler `try/catch` boilerplate services throw `{ status, message }` objects and the wrapper normalizes them into the standard error envelope automatically.
 
 **Before:**
 ```js
@@ -289,7 +289,7 @@ Attached to any route that accepts `?page=` and `?limit=` query parameters. Pars
 // Route
 router.get("/", parsePagination({ defaultLimit: 10, maxLimit: 100 }), listOpportunities);
 
-// Controller / Service — spread the full object
+// Controller / Service spread the full object
 const { page, limit, skip, take } = req.pagination;
 ```
 
@@ -299,8 +299,8 @@ const { page, limit, skip, take } = req.pagination;
 |---|---|
 | `page` | Parsed page number, minimum 1 |
 | `limit` | Parsed limit, clamped to `[1, maxLimit]` |
-| `skip` | `(page - 1) * limit` — Prisma `skip` |
-| `take` | Same as `limit` — Prisma `take` |
+| `skip` | `(page - 1) * limit` Prisma `skip` |
+| `take` | Same as `limit` Prisma `take` |
 
 Controllers and services must spread `...req.pagination` (or destructure all four fields) when passing it down. Passing only `page` and `limit` causes `skip` and `take` to be `undefined`, which silently returns empty arrays from any service that uses `Array.prototype.slice(skip, skip + take)`.
 
@@ -308,7 +308,7 @@ Controllers and services must spread `...req.pagination` (or destructure all fou
 
 ## Authentication
 
-Two `HttpOnly` cookies — no JavaScript access.
+Two `HttpOnly` cookies no JavaScript access.
 
 | Token | Cookie | TTL | Purpose |
 |---|---|---|---|
@@ -335,20 +335,20 @@ All three auth paths (login, register, refresh) write cookies through a single `
 
 All responses use a consistent envelope: `{ success, message, data }`.
 
-**Public** (`/api/public` — no auth):
+**Public** (`/api/public` no auth):
 
 | Method | Path | Description |
 |---|---|---|
 | `GET` | `/api/public/stats` | Returns `{ volunteers, charities, opportunities }` live counts |
 | `POST` | `/api/public/registration` | Submits an NGO registration request; notifies all admins |
 
-**Auth** (`/api/auth` — public): register, login, logout, silent refresh, session management
+**Auth** (`/api/auth` public): register, login, logout, silent refresh, session management
 
-**Admin** (`/api/admin` — ADMIN role): dashboard stats, full user and charity management, registration and verification request review, reports, platform settings, audit log, API key management
+**Admin** (`/api/admin` ADMIN role): dashboard stats, full user and charity management, registration and verification request review, reports, platform settings, audit log, API key management
 
-**Charity** (`/api/charity` — CHARITY role): profile, project and opportunity CRUD, application review (approve/decline), volunteer ratings, bulk certificate issuance, analytics dashboard, volunteer roster, real-time room management
+**Charity** (`/api/charity` CHARITY role): profile, project and opportunity CRUD, application review (approve/decline), volunteer ratings, bulk certificate issuance, analytics dashboard, volunteer roster, real-time room management
 
-**User** (`/api/user` — USER role): match-ranked opportunity feed with filters, application management, volunteer rooms, certificates, experience history, volunteering preferences, notifications, community feed
+**User** (`/api/user` USER role): match-ranked opportunity feed with filters, application management, volunteer rooms, certificates, experience history, volunteering preferences, notifications, community feed
 
 ---
 
@@ -376,7 +376,7 @@ const socket = io("http://localhost:5000", { auth: { token: "jwt-access-token" }
 |---|---|
 | Password hashing | bcrypt, 12 salt rounds |
 | Tokens | JWT access (20 min) + SHA-256-hashed refresh (7 days), both HttpOnly |
-| Token rotation | Family-based — revoked token reuse invalidates all sessions in the family |
+| Token rotation | Family-based revoked token reuse invalidates all sessions in the family |
 | Session limits | Max 5 concurrent sessions per user |
 | Account lockout | 5 failed logins → 15-min lockout |
 | Rate limiting | 10 auth requests per 15-min window |
@@ -421,7 +421,7 @@ User  (role: USER | ADMIN | CHARITY)
 
 **Opportunity lifecycle:** `OPEN` → `FULL` (auto when approved = maxSlots) → `ENDED` or `CANCELLED`
 
-**Role enum:** `USER` · `ADMIN` · `CHARITY` — the `VOLUNTEER` role was removed; the volunteer identity is expressed through `VolunteerProfile` (a separate table linked to `User`) rather than a role value. This keeps the role enum as a portal-access concept only.
+**Role enum:** `USER` · `ADMIN` · `CHARITY` the `VOLUNTEER` role was removed; the volunteer identity is expressed through `VolunteerProfile` (a separate table linked to `User`) rather than a role value. This keeps the role enum as a portal-access concept only.
 
 **Enums:**
 - Category: `EDUCATION` · `HEALTH` · `ENVIRONMENT` · `ANIMAL_WELFARE` · `SOCIAL` · `OTHER`
