@@ -1,6 +1,6 @@
-# Hope Link — Backend API
+# Hope Link - Backend API
 
-A platform connecting NGOs with volunteers across Lebanon. Three separate portals — Admin, Charity, and Volunteer — run under a single server, with real-time chat, smart opportunity matching, and secure authentication.
+A platform connecting NGOs with volunteers across Lebanon. Three separate portals Admin, Charity, and Volunteer, run under a single server, with real-time chat, smart opportunity matching, and secure authentication.
 
 For architecture details, engineering decisions, and code conventions, see [TECHNICAL.md](TECHNICAL.md).
 
@@ -12,8 +12,8 @@ For architecture details, engineering decisions, and code conventions, see [TECH
 2. [Who Uses It?](#who-uses-it)
 3. [What the Platform Does](#what-the-platform-does)
 4. [Getting Started](#getting-started)
-   - [Option A — Docker (Recommended)](#option-a--docker)
-   - [Option B — Manual](#option-b--manual)
+   - [Option A Docker (Recommended)](#option-a--docker)
+   - [Option B Manual](#option-b--manual)
 
 ---
 
@@ -59,11 +59,11 @@ Hope Link is a volunteer management platform for Lebanon. It connects charities 
 
 ## Getting Started
 
-Two options: **Docker** (recommended — zero local setup) or **manual**.
+Two options: **Docker** (recommended zero local setup) or **manual**.
 
 ---
 
-### Option A — Docker
+### Option A Docker
 
 **Prerequisites:** [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 
@@ -82,7 +82,7 @@ UPSTASH_REDIS_REST_TOKEN=your-token
 REDIS_URL=rediss://default:TOKEN@your-instance.upstash.io:6379
 ```
 
-PostgreSQL and Redis are provided by Docker Compose — no local installs needed.
+PostgreSQL and Redis are provided by Docker Compose no local installs needed.
 
 **2. Build and start all services:**
 
@@ -121,7 +121,7 @@ docker compose exec api sh        # open a shell inside the api container
 
 ---
 
-### Option B — Manual
+### Option B Manual
 
 **Prerequisites:** Node.js >= 22, PostgreSQL, an Upstash Redis instance, a Supabase project, a Resend account.
 
