@@ -102,7 +102,7 @@ export async function generateCertificatePdf({
   const pdfDoc = await PDFDocument.create();
 
   // Set metadata
-  pdfDoc.setTitle(`Certificate of Appreciation — ${volunteerName}`);
+  pdfDoc.setTitle(`Certificate of Appreciation ${volunteerName}`);
   pdfDoc.setAuthor("Hope Link Platform");
   pdfDoc.setSubject(`Volunteer Certificate for ${opportunityTitle}`);
   pdfDoc.setCreator("Hope Link");
@@ -262,7 +262,7 @@ export async function generateCertificatePdf({
       ? new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
       : "N/A";
 
-  const periodText = `${formatDate(startDate)}  —  ${formatDate(endDate)}`;
+  const periodText = `${formatDate(startDate)}   ${formatDate(endDate)}`;
   page.drawText(periodText, {
     x: centerX(periodText, fontRegular, 10, width),
     y: height - 378,

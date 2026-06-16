@@ -35,7 +35,7 @@ describe("POST /api/auth/login", () => {
     prismaMock.accountLockout.findUnique.mockResolvedValue(null);
     prismaMock.loginAttempt.create.mockResolvedValue({});
     prismaMock.loginAttempt.deleteMany.mockResolvedValue({ count: 0 });
-    prismaMock.accountLockout.delete.mockResolvedValue({}); // clearLockout — must be a Promise
+    prismaMock.accountLockout.delete.mockResolvedValue({}); // clearLockout must be a Promise
     prismaMock.refreshToken.findMany.mockResolvedValue([]);  // detectSuspiciousActivity
     prismaMock.refreshToken.updateMany.mockResolvedValue({ count: 0 });
     prismaMock.refreshToken.create.mockResolvedValue({ id: "session-1" });

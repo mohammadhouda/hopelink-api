@@ -170,7 +170,7 @@ export const getDashboardStats = async () => {
     })),
   ].sort((a, b) => new Date(b.submitted) - new Date(a.submitted));
 
-  // Shape recent decisions — merge both types, sort by reviewedAt, take 5
+  // Shape recent decisions merge both types, sort by reviewedAt, take 5
   const recentDecisions = [
     ...recentRegDecisions.map((r) => ({
       id: r.id,

@@ -30,7 +30,7 @@ describe("POST /api/auth/refresh", () => {
     const stored = makeStoredToken();
     prismaMock.refreshToken.findUnique.mockResolvedValueOnce(stored);
 
-    // $transaction mock — passes the prismaMock as the tx argument
+    // $transaction mock passes the prismaMock as the tx argument
     prismaMock.$transaction.mockImplementation(async (cb) => cb(prismaMock));
 
     // Inside the transaction:

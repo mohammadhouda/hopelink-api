@@ -38,7 +38,7 @@ async function backfill() {
     );
   }
 
-  console.log("[Backfill] done — jobs are queued, worker will process them shortly");
+  console.log("[Backfill] done jobs are queued, worker will process them shortly");
   await prisma.$disconnect();
   process.exit(0);
 }

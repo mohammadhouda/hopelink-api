@@ -443,7 +443,7 @@ async function main() {
 
   await prisma.volunteerExperience.createMany({
     data: [
-      // Karim Haddad — Civil engineering student at AUB
+      // Karim Haddad Civil engineering student at AUB
       {
         volunteerId: vp1.id,
         company: "Beit El Baraka",
@@ -463,7 +463,7 @@ async function main() {
         description: "Assisted senior engineers on residential construction projects in Ashrafieh. Handled site safety inspections and material intake logs.",
       },
 
-      // Lara Mouawad — Nutritionist
+      // Lara Mouawad Nutritionist
       {
         volunteerId: vp2.id,
         company: "Lebanese Food Bank",
@@ -483,7 +483,7 @@ async function main() {
         description: "Managed a community kitchen in Jounieh serving 200+ meals weekly for families affected by the economic crisis. Trained 10 local volunteers on food hygiene and safe preparation.",
       },
 
-      // Omar Darwish — Social worker from Tripoli
+      // Omar Darwish Social worker from Tripoli
       {
         volunteerId: vp3.id,
         company: "Tripoli Social Services Directorate",
@@ -512,18 +512,18 @@ async function main() {
         description: "Assisted with UNHCR registration drives for Syrian and Palestinian refugees in North Lebanon. Translated Arabic-Kurdish conversations during family interviews.",
       },
 
-      // Maya Sarkis — Pharmacy student at LAU
+      // Maya Sarkis Pharmacy student at LAU
       {
         volunteerId: vp4.id,
         company: "Arcenciel",
-        role: "Pharmacy Intern — Mobile Clinics",
+        role: "Pharmacy Intern Mobile Clinics",
         startDate: new Date("2025-10-01"),
         endDate: new Date("2026-01-31"),
         isCurrent: false,
         description: "Assisted pharmacist supervisor at Bekaa Valley mobile clinics. Dispensed medications for chronic conditions, maintained stock records, and educated patients on proper dosage and storage.",
       },
 
-      // Rami Najjar — Teacher in Sidon
+      // Rami Najjar Teacher in Sidon
       {
         volunteerId: vp5.id,
         company: "Sidon Public Secondary School",
@@ -543,10 +543,10 @@ async function main() {
         description: "Organized and delivered free after-school tutoring for 30+ children aged 10-16. Recruited and trained 4 fellow teacher volunteers to cover math and science subjects.",
       },
 
-      // Nadia Awad — Graphic designer & photographer
+      // Nadia Awad Graphic designer & photographer
       {
         volunteerId: vp6.id,
-        company: "Freelance — NGO Sector",
+        company: "Freelance NGO Sector",
         role: "Creative Volunteer & Designer",
         startDate: new Date("2023-01-01"),
         endDate: null,
@@ -689,7 +689,7 @@ async function main() {
   const proj4 = await prisma.charityProject.create({
     data: {
       charityId: charity2.id,
-      title: "Vocational Training — North Lebanon",
+      title: "Vocational Training North Lebanon",
       description: "Six-month vocational training program in Tripoli covering carpentry, electrical work, and plumbing for unemployed youth aged 18-30.",
       status: "PAUSED",
       category: "EDUCATION",
@@ -744,7 +744,7 @@ async function main() {
     data: {
       charityId: charity1.id,
       projectId: proj1.id,
-      title: "Karantina Market Setup — March Shift",
+      title: "Karantina Market Setup March Shift",
       description: "Help sort donated goods, stock shelves, and assist families during shopping hours at the Karantina free supermarket. Arabic speakers needed for family interaction.",
       startDate: d(-30),
       endDate: d(-28),
@@ -761,7 +761,7 @@ async function main() {
     data: {
       charityId: charity1.id,
       projectId: proj1.id,
-      title: "Karantina Market — April Weekend Volunteers",
+      title: "Karantina Market April Weekend Volunteers",
       description: "Regular weekend volunteering at Beit El Baraka's Karantina location. Tasks include receiving donations, organizing inventory, and welcoming families.",
       startDate: d(5),
       endDate: d(7),
@@ -794,7 +794,7 @@ async function main() {
     data: {
       charityId: charity2.id,
       projectId: proj3.id,
-      title: "Scholarship Interview Day — Beirut",
+      title: "Scholarship Interview Day Beirut",
       description: "Assist with interviewing scholarship candidates at the Beirut center. Volunteers will help guide students through the process and provide logistical support.",
       startDate: d(-14),
       endDate: d(-14),
@@ -827,7 +827,7 @@ async function main() {
     data: {
       charityId: charity3.id,
       projectId: proj5.id,
-      title: "Bekaa Health Clinic — Zahle Session",
+      title: "Bekaa Health Clinic Zahle Session",
       description: "Assist the medical team during a mobile clinic session in Zahle. Tasks include patient registration, pharmacy support, and crowd management. Medical background preferred but not required.",
       startDate: d(7),
       endDate: d(7),
@@ -859,7 +859,7 @@ async function main() {
     data: {
       charityId: charity4.id,
       projectId: proj6.id,
-      title: "Ramadan Iftar Distribution — Tariq El Jdideh",
+      title: "Ramadan Iftar Distribution Tariq El Jdideh",
       description: "Distribute hot Iftar meals to families in Tariq El Jdideh and surrounding areas. Volunteers will help load vans, navigate neighborhoods, and hand-deliver meals door to door.",
       startDate: d(8),
       endDate: d(8),
@@ -875,7 +875,7 @@ async function main() {
     data: {
       charityId: charity5.id,
       projectId: proj7.id,
-      title: "Child Safety Workshop — School Training",
+      title: "Child Safety Workshop School Training",
       description: "Help facilitate workshops for teachers in Sidon schools on recognizing signs of child abuse and proper reporting procedures. Training materials provided.",
       startDate: d(21),
       endDate: d(22),
@@ -892,7 +892,7 @@ async function main() {
   // ══════════════════════════════════════════════════════════
   console.log("  → Applications");
 
-  // opp1 (ENDED Karantina March) — Karim & Nadia approved
+  // opp1 (ENDED Karantina March) Karim & Nadia approved
   const app1 = await prisma.opportunityApplication.create({
     data: { userId: vol1.id, opportunityId: opp1.id, status: "APPROVED", message: "I helped with Karantina cleanup before and know the area well. Happy to sort and stock." },
   });
@@ -900,25 +900,25 @@ async function main() {
     data: { userId: vol6.id, opportunityId: opp1.id, status: "APPROVED", message: "I'd like to photograph the event for awareness and also help with families." },
   });
 
-  // opp2 (OPEN Karantina April) — Karim approved, Nadia pending
+  // opp2 (OPEN Karantina April) Karim approved, Nadia pending
   const app3 = await prisma.opportunityApplication.create({
-    data: { userId: vol1.id, opportunityId: opp2.id, status: "APPROVED", message: "Count me in again — I loved the last Karantina shift." },
+    data: { userId: vol1.id, opportunityId: opp2.id, status: "APPROVED", message: "Count me in again I loved the last Karantina shift." },
   });
   await prisma.opportunityApplication.create({
     data: { userId: vol6.id, opportunityId: opp2.id, status: "PENDING", message: "Would love to continue helping at Karantina this month." },
   });
 
-  // opp3 (OPEN Bourj Hammoud) — pending
+  // opp3 (OPEN Bourj Hammoud) pending
   await prisma.opportunityApplication.create({
-    data: { userId: vol1.id, opportunityId: opp3.id, status: "PENDING", message: "I can carry heavy supplies — happy to help with the distribution." },
+    data: { userId: vol1.id, opportunityId: opp3.id, status: "PENDING", message: "I can carry heavy supplies happy to help with the distribution." },
   });
 
-  // opp4 (ENDED scholarship interviews) — Lara approved
+  // opp4 (ENDED scholarship interviews) Lara approved
   const app7 = await prisma.opportunityApplication.create({
     data: { userId: vol2.id, opportunityId: opp4.id, status: "APPROVED", message: "I've helped organize similar events before. Ready to support the students." },
   });
 
-  // opp5 (OPEN university support) — Omar approved, Rami pending
+  // opp5 (OPEN university support) Omar approved, Rami pending
   const app8 = await prisma.opportunityApplication.create({
     data: { userId: vol3.id, opportunityId: opp5.id, status: "APPROVED", message: "As a social worker I've helped many students navigate applications." },
   });
@@ -926,7 +926,7 @@ async function main() {
     data: { userId: vol5.id, opportunityId: opp5.id, status: "PENDING", message: "I'm a teacher and would love to help students with their personal statements." },
   });
 
-  // opp6 (OPEN Bekaa clinic) — Maya approved, Omar pending
+  // opp6 (OPEN Bekaa clinic) Maya approved, Omar pending
   const app10 = await prisma.opportunityApplication.create({
     data: { userId: vol4.id, opportunityId: opp6.id, status: "APPROVED", message: "I'm a pharmacy student and have assisted at Arcenciel clinics before." },
   });
@@ -934,9 +934,9 @@ async function main() {
     data: { userId: vol3.id, opportunityId: opp6.id, status: "PENDING", message: "I work with displaced communities in the north and can help with registration." },
   });
 
-  // opp7 (OPEN Ramadan packing) — Lara & Karim approved, Nadia pending
+  // opp7 (OPEN Ramadan packing) Lara & Karim approved, Nadia pending
   const app12 = await prisma.opportunityApplication.create({
-    data: { userId: vol2.id, opportunityId: opp7.id, status: "APPROVED", message: "I've worked with the food bank before — I know the packing process well." },
+    data: { userId: vol2.id, opportunityId: opp7.id, status: "APPROVED", message: "I've worked with the food bank before I know the packing process well." },
   });
   const app13 = await prisma.opportunityApplication.create({
     data: { userId: vol1.id, opportunityId: opp7.id, status: "APPROVED", message: "I can do heavy lifting and help organize the warehouse logistics." },
@@ -945,12 +945,12 @@ async function main() {
     data: { userId: vol6.id, opportunityId: opp7.id, status: "PENDING", message: "I'd like to document the packing and also help out." },
   });
 
-  // opp8 (OPEN Iftar distribution) — Omar approved
+  // opp8 (OPEN Iftar distribution) Omar approved
   const app15 = await prisma.opportunityApplication.create({
     data: { userId: vol3.id, opportunityId: opp8.id, status: "APPROVED", message: "I know Tariq El Jdideh well from my social work. I can help navigate." },
   });
 
-  // opp9 (OPEN child safety) — Rami declined
+  // opp9 (OPEN child safety) Rami declined
   await prisma.opportunityApplication.create({
     data: { userId: vol5.id, opportunityId: opp9.id, status: "DECLINED", message: "I teach in Sidon schools and know many of the staff personally." },
   });
@@ -960,7 +960,7 @@ async function main() {
   // ══════════════════════════════════════════════════════════
   console.log("  → Rooms & members");
 
-  // Room 1 — opp1 ENDED (closed)
+  // Room 1 opp1 ENDED (closed)
   const room1 = await prisma.volunteerRoom.create({
     data: {
       opportunityId: opp1.id,
@@ -976,7 +976,7 @@ async function main() {
     },
   });
 
-  // Room 2 — opp2 OPEN
+  // Room 2 opp2 OPEN
   const room2 = await prisma.volunteerRoom.create({
     data: {
       opportunityId: opp2.id,
@@ -990,7 +990,7 @@ async function main() {
     },
   });
 
-  // Room 3 — opp4 ENDED (closed)
+  // Room 3 opp4 ENDED (closed)
   const room3 = await prisma.volunteerRoom.create({
     data: {
       opportunityId: opp4.id,
@@ -1005,7 +1005,7 @@ async function main() {
     },
   });
 
-  // Room 4 — opp5 OPEN
+  // Room 4 opp5 OPEN
   const room4 = await prisma.volunteerRoom.create({
     data: {
       opportunityId: opp5.id,
@@ -1019,7 +1019,7 @@ async function main() {
     },
   });
 
-  // Room 5 — opp6 OPEN
+  // Room 5 opp6 OPEN
   const room5 = await prisma.volunteerRoom.create({
     data: {
       opportunityId: opp6.id,
@@ -1033,7 +1033,7 @@ async function main() {
     },
   });
 
-  // Room 6 — opp7 OPEN
+  // Room 6 opp7 OPEN
   const room6 = await prisma.volunteerRoom.create({
     data: {
       opportunityId: opp7.id,
@@ -1048,7 +1048,7 @@ async function main() {
     },
   });
 
-  // Room 7 — opp8 OPEN
+  // Room 7 opp8 OPEN
   const room7 = await prisma.volunteerRoom.create({
     data: {
       opportunityId: opp8.id,
@@ -1067,40 +1067,40 @@ async function main() {
   // ══════════════════════════════════════════════════════════
   console.log("  → Messages");
 
-  // Room 1 — Karantina March (closed)
+  // Room 1 Karantina March (closed)
   await prisma.roomMessage.createMany({
     data: [
       { roomId: room1.id, senderId: charity1User.id, content: "Ahla w sahla! Welcome to the Karantina market team. We're setting up this Saturday at 8am.", createdAt: d(-33) },
       { roomId: room1.id, senderId: vol1.id, content: "Great! I'll be there early. Should I bring anything?", createdAt: d(-33) },
       { roomId: room1.id, senderId: charity1User.id, content: "Just comfortable clothes and closed shoes. We provide gloves and aprons. Parking is available behind the building.", createdAt: d(-33) },
-      { roomId: room1.id, senderId: vol6.id, content: "I'll bring my camera too — is it okay to take photos during the event?", createdAt: d(-32) },
-      { roomId: room1.id, senderId: charity1User.id, content: "Yes please! But no photos of families — only of volunteers working and general setup. We'll brief everyone on privacy guidelines.", createdAt: d(-32) },
+      { roomId: room1.id, senderId: vol6.id, content: "I'll bring my camera too is it okay to take photos during the event?", createdAt: d(-32) },
+      { roomId: room1.id, senderId: charity1User.id, content: "Yes please! But no photos of families only of volunteers working and general setup. We'll brief everyone on privacy guidelines.", createdAt: d(-32) },
       { roomId: room1.id, senderId: vol1.id, content: "Amazing day today! We served over 120 families. The new shelf organization system worked really well.", createdAt: d(-30) },
-      { roomId: room1.id, senderId: charity1User.id, content: "Thank you both so much! Karim, Nadia — you were incredible. Certificates will be issued this week. Yalla see you next time!", createdAt: d(-30) },
+      { roomId: room1.id, senderId: charity1User.id, content: "Thank you both so much! Karim, Nadia you were incredible. Certificates will be issued this week. Yalla see you next time!", createdAt: d(-30) },
     ],
   });
 
-  // Room 2 — Karantina April (active)
+  // Room 2 Karantina April (active)
   await prisma.roomMessage.createMany({
     data: [
       { roomId: room2.id, senderId: charity1User.id, content: "Marhaba Karim! You're confirmed for the April weekend shift. Same location as last time.", createdAt: d(-3) },
-      { roomId: room2.id, senderId: vol1.id, content: "Perfect! Same time at 8am? I noticed last time we ran low on rice — should I check the inventory beforehand?", createdAt: d(-3) },
+      { roomId: room2.id, senderId: vol1.id, content: "Perfect! Same time at 8am? I noticed last time we ran low on rice should I check the inventory beforehand?", createdAt: d(-3) },
       { roomId: room2.id, senderId: charity1User.id, content: "That would be amazing actually. I'll give you warehouse access on Friday. We just received a big donation from a supermarket in Achrafieh.", createdAt: d(-2) },
     ],
   });
 
-  // Room 3 — Scholarship interviews (closed)
+  // Room 3 Scholarship interviews (closed)
   await prisma.roomMessage.createMany({
     data: [
       { roomId: room3.id, senderId: charity2User.id, content: "Welcome Lara! We have 45 students coming for interviews tomorrow. Your role is to guide them through the waiting area and help with forms.", createdAt: d(-16) },
       { roomId: room3.id, senderId: vol2.id, content: "Understood! Are the forms in Arabic or English?", createdAt: d(-16) },
-      { roomId: room3.id, senderId: charity2User.id, content: "Both — we have bilingual versions. Some students from public schools may need help with the English sections.", createdAt: d(-15) },
+      { roomId: room3.id, senderId: charity2User.id, content: "Both we have bilingual versions. Some students from public schools may need help with the English sections.", createdAt: d(-15) },
       { roomId: room3.id, senderId: vol2.id, content: "Interview day went smoothly! Some really inspiring stories from the students. One girl walked 2 hours from Dahieh to get here.", createdAt: d(-14) },
       { roomId: room3.id, senderId: charity2User.id, content: "You were wonderful with them, Lara. Thank you so much. We'll send your certificate soon.", createdAt: d(-14) },
     ],
   });
 
-  // Room 4 — University support (active)
+  // Room 4 University support (active)
   await prisma.roomMessage.createMany({
     data: [
       { roomId: room4.id, senderId: charity2User.id, content: "Hi Omar! Welcome to the university application support team. Sessions start April 20th at our Beirut center.", createdAt: d(-2) },
@@ -1109,31 +1109,31 @@ async function main() {
     ],
   });
 
-  // Room 5 — Bekaa clinic (active)
+  // Room 5 Bekaa clinic (active)
   await prisma.roomMessage.createMany({
     data: [
       { roomId: room5.id, senderId: charity3User.id, content: "Ahla Maya! The clinic session is next Saturday in Zahle. We start at 7:30am because patients line up early.", createdAt: d(-2) },
       { roomId: room5.id, senderId: vol4.id, content: "I'll be there! Should I review any specific medication lists? As a pharmacy student I can help with dispensing.", createdAt: d(-2) },
-      { roomId: room5.id, senderId: charity3User.id, content: "Yes — I'll send you the formulary. Most common needs are chronic disease medications: diabetes, hypertension, and antibiotics.", createdAt: d(-1) },
+      { roomId: room5.id, senderId: charity3User.id, content: "Yes I'll send you the formulary. Most common needs are chronic disease medications: diabetes, hypertension, and antibiotics.", createdAt: d(-1) },
     ],
   });
 
-  // Room 6 — Ramadan packing (active)
+  // Room 6 Ramadan packing (active)
   await prisma.roomMessage.createMany({
     data: [
       { roomId: room6.id, senderId: charity4User.id, content: "Welcome team! Ramadan Mubarak to everyone. We're packing 500 parcels this Thursday at the Badaro warehouse.", createdAt: d(-2) },
-      { roomId: room6.id, senderId: vol2.id, content: "Ramadan Kareem! I've done this before — should I bring extra tape for the boxes? Last time we ran out.", createdAt: d(-2) },
+      { roomId: room6.id, senderId: vol2.id, content: "Ramadan Kareem! I've done this before should I bring extra tape for the boxes? Last time we ran out.", createdAt: d(-2) },
       { roomId: room6.id, senderId: charity4User.id, content: "Good memory Lara! Yes please bring some. Karim, you'll be on the loading team since you mentioned you can handle heavy lifting.", createdAt: d(-1) },
-      { roomId: room6.id, senderId: vol1.id, content: "Sounds good! I'll bring a friend too — he's not on the platform yet but wants to help. Is that okay?", createdAt: d(-1) },
+      { roomId: room6.id, senderId: vol1.id, content: "Sounds good! I'll bring a friend too he's not on the platform yet but wants to help. Is that okay?", createdAt: d(-1) },
       { roomId: room6.id, senderId: charity4User.id, content: "Walk-ins are welcome! Just have him sign in at the front desk. The more hands the better.", createdAt: d(0) },
     ],
   });
 
-  // Room 7 — Iftar distribution (active)
+  // Room 7 Iftar distribution (active)
   await prisma.roomMessage.createMany({
     data: [
       { roomId: room7.id, senderId: charity4User.id, content: "Hi Omar! The Iftar distribution in Tariq El Jdideh is next week. We'll meet at the warehouse at 4pm and head out by 5pm.", createdAt: d(-1) },
-      { roomId: room7.id, senderId: vol3.id, content: "I'll be there inshallah. I know the area well — some of the families I work with live there. I can help with navigation.", createdAt: d(-1) },
+      { roomId: room7.id, senderId: vol3.id, content: "I'll be there inshallah. I know the area well some of the families I work with live there. I can help with navigation.", createdAt: d(-1) },
       { roomId: room7.id, senderId: charity4User.id, content: "That's incredibly helpful. We're delivering 200 hot meals. I'll pair you with our driver who covers the Corniche El Mazraa side.", createdAt: d(0) },
     ],
   });
@@ -1148,7 +1148,7 @@ async function main() {
       {
         charityId: charity1.id, volunteerId: vol1.id, opportunityId: opp1.id,
         rating: 5,
-        comment: "Karim was outstanding — arrived early, organized the entire rice and lentil section, and was incredibly respectful with families. A natural leader.",
+        comment: "Karim was outstanding arrived early, organized the entire rice and lentil section, and was incredibly respectful with families. A natural leader.",
       },
       {
         charityId: charity1.id, volunteerId: vol6.id, opportunityId: opp1.id,
@@ -1158,7 +1158,7 @@ async function main() {
       {
         charityId: charity2.id, volunteerId: vol2.id, opportunityId: opp4.id,
         rating: 5,
-        comment: "Lara went above and beyond — she calmed nervous students, helped with Arabic translations, and stayed an extra hour to help clean up.",
+        comment: "Lara went above and beyond she calmed nervous students, helped with Arabic translations, and stayed an extra hour to help clean up.",
       },
     ],
   });
@@ -1174,7 +1174,7 @@ async function main() {
         volunteerId: vol1.id, opportunityId: opp1.id, charityId: charity1.id,
         certificateData: {
           volunteerName: "Karim Haddad", charityName: "Beit El Baraka",
-          opportunityTitle: "Karantina Market Setup — March Shift",
+          opportunityTitle: "Karantina Market Setup March Shift",
           startDate: d(-30), endDate: d(-30), issuedAt: d(-28),
           verificationCode: "HL-2026-KH-001",
         },
@@ -1184,7 +1184,7 @@ async function main() {
         volunteerId: vol6.id, opportunityId: opp1.id, charityId: charity1.id,
         certificateData: {
           volunteerName: "Nadia Awad", charityName: "Beit El Baraka",
-          opportunityTitle: "Karantina Market Setup — March Shift",
+          opportunityTitle: "Karantina Market Setup March Shift",
           startDate: d(-30), endDate: d(-30), issuedAt: d(-28),
           verificationCode: "HL-2026-NA-002",
         },
@@ -1194,7 +1194,7 @@ async function main() {
         volunteerId: vol2.id, opportunityId: opp4.id, charityId: charity2.id,
         certificateData: {
           volunteerName: "Lara Mouawad", charityName: "Nusaned",
-          opportunityTitle: "Scholarship Interview Day — Beirut",
+          opportunityTitle: "Scholarship Interview Day Beirut",
           startDate: d(-14), endDate: d(-14), issuedAt: d(-12),
           verificationCode: "HL-2026-LM-003",
         },
@@ -1215,8 +1215,8 @@ async function main() {
       { userId: admin.id, title: "Verification Request", message: "Himaya submitted verification documents including their MOI registration certificate.", type: "INFO", isRead: false, link: "/requests" },
       
       // Charity - Beit El Baraka (charity1)
-      { userId: charity1User.id, title: "New Application Received", message: "Karim Haddad applied for \"Karantina Market — April Weekend Volunteers\".", type: "INFO", isRead: false, link: "/charity/applications" },
-      { userId: charity1User.id, title: "New Application Received", message: "Nadia Awad applied for \"Karantina Market — April Weekend Volunteers\".", type: "INFO", isRead: false, link: "/charity/applications" },
+      { userId: charity1User.id, title: "New Application Received", message: "Karim Haddad applied for \"Karantina Market April Weekend Volunteers\".", type: "INFO", isRead: false, link: "/charity/applications" },
+      { userId: charity1User.id, title: "New Application Received", message: "Nadia Awad applied for \"Karantina Market April Weekend Volunteers\".", type: "INFO", isRead: false, link: "/charity/applications" },
       { userId: charity1User.id, title: "New Application Received", message: "Karim Haddad applied for \"Bourj Hammoud Blanket Distribution\".", type: "INFO", isRead: true, link: "/charity/applications" },
       
       // Charity - Nusaned (charity2)
@@ -1224,27 +1224,27 @@ async function main() {
       { userId: charity2User.id, title: "New Application Received", message: "Rami Najjar applied for \"University Application Support Sessions\".", type: "INFO", isRead: true, link: "/charity/applications" },
       
       // Charity - Arcenciel (charity3)
-      { userId: charity3User.id, title: "New Application Received", message: "Maya Sarkis applied for \"Bekaa Health Clinic — Zahle Session\".", type: "INFO", isRead: false, link: "/charity/applications" },
-      { userId: charity3User.id, title: "New Application Received", message: "Omar Darwish applied for \"Bekaa Health Clinic — Zahle Session\".", type: "INFO", isRead: true, link: "/charity/applications" },
+      { userId: charity3User.id, title: "New Application Received", message: "Maya Sarkis applied for \"Bekaa Health Clinic Zahle Session\".", type: "INFO", isRead: false, link: "/charity/applications" },
+      { userId: charity3User.id, title: "New Application Received", message: "Omar Darwish applied for \"Bekaa Health Clinic Zahle Session\".", type: "INFO", isRead: true, link: "/charity/applications" },
       
       // Charity - Lebanese Food Bank (charity4)
       { userId: charity4User.id, title: "New Application Received", message: "Lara Mouawad applied for \"Ramadan Food Parcel Packing\".", type: "INFO", isRead: false, link: "/charity/applications" },
       { userId: charity4User.id, title: "New Application Received", message: "Karim Haddad applied for \"Ramadan Food Parcel Packing\".", type: "INFO", isRead: false, link: "/charity/applications" },
       { userId: charity4User.id, title: "New Application Received", message: "Nadia Awad applied for \"Ramadan Food Parcel Packing\".", type: "INFO", isRead: true, link: "/charity/applications" },
-      { userId: charity4User.id, title: "New Application Received", message: "Omar Darwish applied for \"Ramadan Iftar Distribution — Tariq El Jdideh\".", type: "INFO", isRead: false, link: "/charity/applications" },
+      { userId: charity4User.id, title: "New Application Received", message: "Omar Darwish applied for \"Ramadan Iftar Distribution Tariq El Jdideh\".", type: "INFO", isRead: false, link: "/charity/applications" },
       
       // Charity - Himaya (charity5)
-      { userId: charity5User.id, title: "New Application Received", message: "Rami Najjar applied for \"Child Safety Workshop — School Training\".", type: "INFO", isRead: true, link: "/charity/applications" },
+      { userId: charity5User.id, title: "New Application Received", message: "Rami Najjar applied for \"Child Safety Workshop School Training\".", type: "INFO", isRead: true, link: "/charity/applications" },
 
       // Volunteers
-      { userId: vol1.id, title: "Application Approved!", message: "Your application for \"Karantina Market — April Weekend Volunteers\" has been approved. You've been added to the volunteer room.", type: "SUCCESS", isRead: false, link: "/user/rooms/65" },
-      { userId: vol1.id, title: "Certificate Issued!", message: "You've been issued a certificate for completing \"Karantina Market Setup — March Shift\" with Beit El Baraka.", type: "SUCCESS", isRead: true, link: "/user/certificates" },
+      { userId: vol1.id, title: "Application Approved!", message: "Your application for \"Karantina Market April Weekend Volunteers\" has been approved. You've been added to the volunteer room.", type: "SUCCESS", isRead: false, link: "/user/rooms/65" },
+      { userId: vol1.id, title: "Certificate Issued!", message: "You've been issued a certificate for completing \"Karantina Market Setup March Shift\" with Beit El Baraka.", type: "SUCCESS", isRead: true, link: "/user/certificates" },
       { userId: vol1.id, title: "You received a 5-star rating", message: "Beit El Baraka rated you 5/5 for \"Karantina Market Setup\". Comment: Karim was outstanding.", type: "INFO", isRead: false, link: "/user/profile" },
       { userId: vol2.id, title: "Application Approved!", message: "Your application for \"Ramadan Food Parcel Packing\" has been approved.", type: "SUCCESS", isRead: false, link: "/user/rooms/43" },
       { userId: vol2.id, title: "Certificate Issued!", message: "You've been issued a certificate for \"Scholarship Interview Day\" with Nusaned.", type: "SUCCESS", isRead: true, link: "/user/certificates" },
       { userId: vol3.id, title: "Application Approved!", message: "Your application for \"University Application Support Sessions\" has been approved.", type: "SUCCESS", isRead: false, link: "/user/rooms/44" },
-      { userId: vol4.id, title: "Application Approved!", message: "Your application for \"Bekaa Health Clinic — Zahle Session\" has been approved.", type: "SUCCESS", isRead: false, link: "/user/rooms/42" },
-      { userId: vol5.id, title: "Application Declined", message: "Your application for \"Child Safety Workshop — School Training\" has been declined.", type: "WARNING", isRead: false, link: "/user/opportunities/9" },
+      { userId: vol4.id, title: "Application Approved!", message: "Your application for \"Bekaa Health Clinic Zahle Session\" has been approved.", type: "SUCCESS", isRead: false, link: "/user/rooms/42" },
+      { userId: vol5.id, title: "Application Declined", message: "Your application for \"Child Safety Workshop School Training\" has been declined.", type: "WARNING", isRead: false, link: "/user/opportunities/9" },
     ],
   });
 
@@ -1348,7 +1348,7 @@ async function main() {
       {
         key: "registration_approved", name: "Registration Approved",
         description: "Sent to charities when their registration is approved.",
-        subject: "Welcome to Hope Link — Your registration has been approved!",
+        subject: "Welcome to Hope Link Your registration has been approved!",
         body: "Dear {{name}},\n\nWe are pleased to inform you that your registration on Hope Link has been approved. You can now log in, complete your profile, and start posting volunteering opportunities.\n\nIf you have any questions, please contact us at support@hopelink.org.\n\nThank you for joining the Hope Link community.\n\nBest regards,\nThe Hope Link Team",
         variables: ["name"],
       },
@@ -1396,7 +1396,7 @@ async function main() {
     data: {
       authorId: charity1User.id,
       postType: "PROJECT",
-      content: "Week 4 update on the Karantina Community Market project! 🛒\n\nThis week we welcomed 87 new families to the free supermarket, bringing our total to over 1,200 registered families since the project launched. Our volunteer team has been incredible — sorting, stocking shelves, and greeting every family with warmth.\n\nWe're still looking for volunteers for Saturday morning shifts. Apply now through Hope Link!",
+      content: "Week 4 update on the Karantina Community Market project! 🛒\n\nThis week we welcomed 87 new families to the free supermarket, bringing our total to over 1,200 registered families since the project launched. Our volunteer team has been incredible sorting, stocking shelves, and greeting every family with warmth.\n\nWe're still looking for volunteers for Saturday morning shifts. Apply now through Hope Link!",
       imageUrl: "https://picsum.photos/seed/market1/800/450",
       createdAt: d(-5),
       updatedAt: d(-5),
@@ -1407,7 +1407,7 @@ async function main() {
     data: {
       authorId: vol2.id,
       postType: "GENERAL",
-      content: "Spent Saturday at the Lebanese Food Bank sorting and packing Ramadan food parcels. We packed over 300 parcels in 4 hours as a team — it always amazes me what a group of motivated volunteers can achieve together. Grateful to be part of this community. 🌙",
+      content: "Spent Saturday at the Lebanese Food Bank sorting and packing Ramadan food parcels. We packed over 300 parcels in 4 hours as a team it always amazes me what a group of motivated volunteers can achieve together. Grateful to be part of this community. 🌙",
       imageUrl: "https://picsum.photos/seed/foodbank1/800/420",
       createdAt: d(-7),
       updatedAt: d(-7),
@@ -1418,7 +1418,7 @@ async function main() {
     data: {
       authorId: charity4User.id,
       postType: "PROJECT",
-      content: "Ramadan Food Drive 2026 — Day 3 Update 🌙\n\nAlhamdulillah, we've already collected over 2,000 food parcels across our 5 collection points in Beirut, Tripoli, and Sidon. Each parcel feeds a family for a week.\n\nA huge thank you to every volunteer who has given their time this week. We couldn't do this without you. Join us — every hour counts. Register on Hope Link today.",
+      content: "Ramadan Food Drive 2026 Day 3 Update 🌙\n\nAlhamdulillah, we've already collected over 2,000 food parcels across our 5 collection points in Beirut, Tripoli, and Sidon. Each parcel feeds a family for a week.\n\nA huge thank you to every volunteer who has given their time this week. We couldn't do this without you. Join us every hour counts. Register on Hope Link today.",
       imageUrl: null,
       createdAt: d(-2),
       updatedAt: d(-2),
@@ -1429,7 +1429,7 @@ async function main() {
     data: {
       authorId: vol3.id,
       postType: "GENERAL",
-      content: "After 4 years of social work in Tripoli, I've learned that the most powerful thing you can give someone isn't food or money — it's the feeling that someone sees them and cares. Volunteering has changed how I see the world. If you're on the fence about signing up, just do it. The families you'll meet will change your life.",
+      content: "After 4 years of social work in Tripoli, I've learned that the most powerful thing you can give someone isn't food or money it's the feeling that someone sees them and cares. Volunteering has changed how I see the world. If you're on the fence about signing up, just do it. The families you'll meet will change your life.",
       imageUrl: null,
       createdAt: d(-10),
       updatedAt: d(-10),
@@ -1440,7 +1440,7 @@ async function main() {
     data: {
       authorId: vol6.id,
       postType: "GENERAL",
-      content: "Just finished designing the new awareness campaign visuals for Beit El Baraka's winter drive. Volunteering my design skills feels so much more meaningful than client work — you can see the impact directly. Happy to connect with other creatives who want to contribute to NGOs in Lebanon! 🎨",
+      content: "Just finished designing the new awareness campaign visuals for Beit El Baraka's winter drive. Volunteering my design skills feels so much more meaningful than client work you can see the impact directly. Happy to connect with other creatives who want to contribute to NGOs in Lebanon! 🎨",
       imageUrl: "https://picsum.photos/seed/design1/800/430",
       createdAt: d(-6),
       updatedAt: d(-6),
@@ -1451,7 +1451,7 @@ async function main() {
     data: {
       authorId: charity3User.id,
       postType: "PROJECT",
-      content: "Our Bekaa Mobile Health Clinic completed its 12th session this month ✅\n\nBy the numbers:\n• 340 consultations\n• 180 vaccinations administered\n• 5 villages visited\n• 12 volunteer medical staff\n\nThank you to our incredible team of volunteer doctors, nurses, and pharmacists. Applications are open for the next rotation — health professionals welcome!",
+      content: "Our Bekaa Mobile Health Clinic completed its 12th session this month ✅\n\nBy the numbers:\n• 340 consultations\n• 180 vaccinations administered\n• 5 villages visited\n• 12 volunteer medical staff\n\nThank you to our incredible team of volunteer doctors, nurses, and pharmacists. Applications are open for the next rotation health professionals welcome!",
       imageUrl: "https://picsum.photos/seed/clinic1/800/450",
       createdAt: d(-4),
       updatedAt: d(-4),
@@ -1462,7 +1462,7 @@ async function main() {
     data: {
       authorId: vol4.id,
       postType: "CERTIFICATE",
-      content: "Received my volunteer certificate from Arcenciel for the Bekaa Mobile Clinic rotation! This was my first medical volunteering experience and it surpassed every expectation. Watching patients receive care they couldn't otherwise access — I'm more motivated than ever to continue. Next stop: applying for the summer rotation! 💙",
+      content: "Received my volunteer certificate from Arcenciel for the Bekaa Mobile Clinic rotation! This was my first medical volunteering experience and it surpassed every expectation. Watching patients receive care they couldn't otherwise access I'm more motivated than ever to continue. Next stop: applying for the summer rotation! 💙",
       imageUrl: null,
       createdAt: d(-1),
       updatedAt: d(-1),
@@ -1512,9 +1512,9 @@ async function main() {
       { postId: post1.id, authorId: charity1User.id, content: "It was an honor to have you with us, Karim. Your energy and dedication made a real difference for our families. Thank you!", createdAt: d(-3), updatedAt: d(-3) },
       { postId: post1.id, authorId: vol5.id,         content: "This is so inspiring. I just applied through Hope Link after reading this post!", createdAt: d(-2), updatedAt: d(-2) },
       { postId: post2.id, authorId: vol1.id,         content: "Signed up for next Saturday's shift! Can't wait to contribute.", createdAt: d(-5), updatedAt: d(-5) },
-      { postId: post2.id, authorId: vol6.id,         content: "Would love to help with any marketing or social media you need — just message me!", createdAt: d(-4), updatedAt: d(-4) },
+      { postId: post2.id, authorId: vol6.id,         content: "Would love to help with any marketing or social media you need just message me!", createdAt: d(-4), updatedAt: d(-4) },
       { postId: post3.id, authorId: vol3.id,         content: "300 parcels in 4 hours is incredible teamwork. The Ramadan drive is one of the most impactful things I've seen.", createdAt: d(-7), updatedAt: d(-7) },
-      { postId: post3.id, authorId: charity4User.id, content: "Thank you Lara — your commitment every single week means so much to our team and to the families we serve. 🌙", createdAt: d(-6), updatedAt: d(-6) },
+      { postId: post3.id, authorId: charity4User.id, content: "Thank you Lara your commitment every single week means so much to our team and to the families we serve. 🌙", createdAt: d(-6), updatedAt: d(-6) },
       { postId: post5.id, authorId: vol1.id,         content: "This is exactly why I started volunteering. Thank you for putting it into words, Omar.", createdAt: d(-9), updatedAt: d(-9) },
       { postId: post5.id, authorId: vol4.id,         content: "4 years is remarkable. Your experience is such a resource for newer volunteers like me.", createdAt: d(-9), updatedAt: d(-9) },
       { postId: post6.id, authorId: vol4.id,         content: "Your designs are amazing, Nadia! Would love to see the full campaign when it launches.", createdAt: d(-6), updatedAt: d(-6) },

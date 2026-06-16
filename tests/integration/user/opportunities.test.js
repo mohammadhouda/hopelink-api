@@ -32,7 +32,7 @@ function makeOpportunity(overrides = {}) {
   };
 }
 
-describe("GET /api/user/opportunities — unscored path", () => {
+describe("GET /api/user/opportunities unscored path", () => {
   it("returns 200 with opportunity list ordered by createdAt", async () => {
     userAuth();
     prismaMock.volunteerMatchScore.count.mockResolvedValueOnce(0);
@@ -61,7 +61,7 @@ describe("GET /api/user/opportunities — unscored path", () => {
   });
 });
 
-describe("GET /api/user/opportunities — scored path", () => {
+describe("GET /api/user/opportunities scored path", () => {
   it("returns 200 with opportunities ranked by match score", async () => {
     userAuth();
     prismaMock.volunteerMatchScore.count.mockResolvedValueOnce(3);

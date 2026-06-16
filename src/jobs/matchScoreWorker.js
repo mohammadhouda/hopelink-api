@@ -44,7 +44,7 @@ async function upsertScores(rows) {
 
 // ── score:volunteer ────────────────────────────────────────────────────────────
 async function handleScoreVolunteer({ volunteerId }) {
-  console.log(`[score:volunteer] START — volunteerId=${volunteerId}`);
+  console.log(`[score:volunteer] START volunteerId=${volunteerId}`);
 
   const profile = await prisma.volunteerProfile.findUnique({
     where: { userId: volunteerId },
@@ -61,11 +61,11 @@ async function handleScoreVolunteer({ volunteerId }) {
   const preferences     = profile.preferences ?? [];
 
   console.log(
-    `[score:volunteer] profile — skills: [${volunteerSkills}], days: [${volunteerDays}], prefs: ${preferences.length}`
+    `[score:volunteer] profile skills: [${volunteerSkills}], days: [${volunteerDays}], prefs: ${preferences.length}`
   );
 
   if (volunteerSkills.length === 0 && volunteerDays.length === 0 && preferences.length === 0) {
-    console.log(`[score:volunteer] empty profile — clearing scores for volunteerId=${volunteerId}`);
+    console.log(`[score:volunteer] empty profile clearing scores for volunteerId=${volunteerId}`);
     await prisma.volunteerMatchScore.deleteMany({ where: { volunteerId } });
     return;
   }
@@ -84,7 +84,7 @@ async function handleScoreVolunteer({ volunteerId }) {
     });
 
     batchNum++;
-    console.log(`[score:volunteer] batch ${batchNum} — fetched ${batch.length} OPEN opportunities`);
+    console.log(`[score:volunteer] batch ${batchNum} fetched ${batch.length} OPEN opportunities`);
 
     if (batch.length === 0) break;
 
@@ -97,7 +97,7 @@ async function handleScoreVolunteer({ volunteerId }) {
     }));
 
     const nonZero = rows.filter((r) => r.score > 0).length;
-    console.log(`[score:volunteer] batch ${batchNum} scored — ${nonZero}/${rows.length} with score > 0`);
+    console.log(`[score:volunteer] batch ${batchNum} scored ${nonZero}/${rows.length} with score > 0`);
 
     await upsertScores(rows);
     cursor += BATCH_SIZE;
@@ -111,13 +111,13 @@ async function handleScoreVolunteer({ volunteerId }) {
   });
 
   console.log(
-    `[score:volunteer] DONE — scored ${allOpenIds.size} opportunities, deleted ${deleted.count} stale rows`
+    `[score:volunteer] DONE scored ${allOpenIds.size} opportunities, deleted ${deleted.count} stale rows`
   );
 }
 
 // ── score:opportunity ─────────────────────────────────────────────────────────
 async function handleScoreOpportunity({ opportunityId }) {
-  console.log(`[score:opportunity] START — opportunityId=${opportunityId}`);
+  console.log(`[score:opportunity] START opportunityId=${opportunityId}`);
 
   const opp = await prisma.volunteeringOpportunity.findUnique({
     where: { id: opportunityId },
@@ -154,7 +154,7 @@ async function handleScoreOpportunity({ opportunityId }) {
     });
 
     batchNum++;
-    console.log(`[score:opportunity] batch ${batchNum} — ${profiles.length} volunteer profiles`);
+    console.log(`[score:opportunity] batch ${batchNum} ${profiles.length} volunteer profiles`);
 
     if (profiles.length === 0) break;
 
@@ -176,7 +176,7 @@ async function handleScoreOpportunity({ opportunityId }) {
     if (profiles.length < BATCH_SIZE) break;
   }
 
-  console.log(`[score:opportunity] DONE — scored against ${totalScored} volunteers`);
+  console.log(`[score:opportunity] DONE scored against ${totalScored} volunteers`);
 }
 
 // ── Worker ────────────────────────────────────────────────────────────────────
@@ -196,7 +196,7 @@ matchScoreWorker.on("completed", (job) =>
 );
 
 matchScoreWorker.on("failed", (job, err) =>
-  console.error(`[MatchScoreWorker] ✗ failed job name=${job?.name} id=${job?.id} — ${err.message}`, err.stack)
+  console.error(`[MatchScoreWorker] ✗ failed job name=${job?.name} id=${job?.id} ${err.message}`, err.stack)
 );
 
 matchScoreWorker.on("error", (err) =>

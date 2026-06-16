@@ -9,7 +9,7 @@ async function enqueueVolunteerScore(userId) {
       "score:volunteer",
       { volunteerId: userId },
     );
-    console.log(`[MatchScore] job enqueued — jobId=${job?.id}`);
+    console.log(`[MatchScore] job enqueued jobId=${job?.id}`);
     console.log("[MatchScore] job timestamp:", job.timestamp);
   } catch (err) {
     console.error(`[MatchScore] failed to enqueue score:volunteer for userId=${userId}:`, err.message);

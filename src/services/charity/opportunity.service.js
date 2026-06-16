@@ -108,7 +108,7 @@ export async function updateOpportunity(charityId, opportunityId, data) {
   if (finalStatus === "OPEN" && affectsScoring) {
     enqueueOpportunityScore(opportunityId);
   } else if (status && status !== "OPEN") {
-    // Closed, ended, cancelled — drop stale score rows
+    // Closed, ended, cancelled drop stale score rows
     prisma.volunteerMatchScore.deleteMany({ where: { opportunityId } }).catch(() => {});
   }
 

@@ -10,25 +10,25 @@ jest.unstable_mockModule("../../../src/config/prisma.js", () => ({
 const { default: app } = await import("../../../src/app.js");
 
 function setupDashboardMocks() {
-  // prisma.registrationRequest.count — pending registrations
+  // prisma.registrationRequest.count pending registrations
   prismaMock.registrationRequest.count.mockResolvedValue(3);
-  // prisma.verificationRequest.count — pending verifications
+  // prisma.verificationRequest.count pending verifications
   prismaMock.verificationRequest.count.mockResolvedValue(2);
-  // prisma.user.count — active users (called twice: total + beforeThisMonth)
+  // prisma.user.count active users (called twice: total + beforeThisMonth)
   prismaMock.user.count.mockResolvedValue(100);
-  // $queryRaw — registration trends
+  // $queryRaw registration trends
   prismaMock.$queryRaw.mockResolvedValue([
     { month: "Jan", year: 2025, count: 10 },
   ]);
-  // charityAccount.groupBy — NGOs by city
+  // charityAccount.groupBy NGOs by city
   prismaMock.charityAccount.groupBy.mockResolvedValue([
     { city: "Riyadh", _count: { id: 5 } },
   ]);
-  // registrationRequest.findMany — pending list
+  // registrationRequest.findMany pending list
   prismaMock.registrationRequest.findMany.mockResolvedValue([]);
-  // verificationRequest.findMany — pending verifications list
+  // verificationRequest.findMany pending verifications list
   prismaMock.verificationRequest.findMany.mockResolvedValue([]);
-  // charityProject.count — active + total projects (called twice)
+  // charityProject.count active + total projects (called twice)
   prismaMock.charityProject.count.mockResolvedValue(8);
 }
 

@@ -27,7 +27,7 @@ export const updateAvatar = asyncHandler(async (req, res) => {
   const { avatarUrl } = req.body;
   const currentAvatarUrl = await profileService.getAvatarUrl(req.user.id);
   if (currentAvatarUrl) {
-    // Best-effort delete — log but don't fail the request.
+    // Best-effort delete log but don't fail the request.
     try {
       await deleteFileService(currentAvatarUrl, "logos");
     } catch (err) {
