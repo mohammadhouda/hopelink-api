@@ -1,12 +1,6 @@
-<<<<<<< HEAD
-# Hope Link Backend API
-
-A platform connecting NGOs with volunteers across Lebanon. Three separate portals Admin, Charity, and Volunteer run under a single server, with real-time chat, smart opportunity matching, and secure authentication.
-=======
 # Hope Link - Backend API
 
 A platform connecting NGOs with volunteers across Lebanon. Three separate portals Admin, Charity, and Volunteer, run under a single server, with real-time chat, smart opportunity matching, and secure authentication.
->>>>>>> 52883ae19333ed7fc4ef1ccef0d3c6a409ce0b5f
 
 For architecture details, engineering decisions, and code conventions, see [TECHNICAL.md](TECHNICAL.md).
 
