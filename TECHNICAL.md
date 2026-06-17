@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-# Hope Link API Technical Reference
-=======
 # Hope Link API - Technical Reference
->>>>>>> 52883ae19333ed7fc4ef1ccef0d3c6a409ce0b5f
 
 For the non-technical overview and setup instructions, see [README.md](README.md).
 
