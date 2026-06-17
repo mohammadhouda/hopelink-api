@@ -98,7 +98,7 @@ export async function approveRegistrationRequestService(id, adminId) {
       data: {
         name: request.name,
         phone: request.phone || null,
-        city: request.city || null,
+        city: request.city ? request.city.toUpperCase() : null,
         category: request.category || null,
         userId: user.id,
       },

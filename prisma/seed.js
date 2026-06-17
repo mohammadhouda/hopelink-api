@@ -1256,7 +1256,7 @@ async function main() {
   await prisma.registrationRequest.createMany({
     data: [
       {
-        status: "PENDING", name: "Basmeh & Zeitooneh", email: "info@basmeh-zeitooneh.org",
+        status: "PENDING", name: "Basmeh & Zeitooneh", email: "muhammadawwadawwadpp@gmail.com",
         phone: "+961 1 555 111", city: "Beirut", category: "SOCIAL",
         message: "We are a Lebanese NGO operating community centers in Shatila and Bourj el-Barajneh serving displaced communities with education, livelihood support, and relief.",
       },
