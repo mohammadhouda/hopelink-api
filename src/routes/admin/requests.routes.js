@@ -25,7 +25,6 @@ router.patch("/registration/:id/decline",  declineRegistrationRequestController)
 // ── Verification requests
 router.get(  "/verification",              parsePagination(), getVerificationRequestsController);   // admin
 router.get(  "/verification/:id",          getVerificationRequestController);    // admin
-router.post( "/verification/:userId",      createVerificationRequestController); // charity
 router.patch("/verification/:id/approve",  approveVerificationRequestController); // admin
 router.patch("/verification/:id/decline",  declineVerificationRequestController); // admin
 

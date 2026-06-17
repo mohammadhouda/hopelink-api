@@ -11,6 +11,7 @@ import certificateRoutes from "./certificate.routes.js";
 import roomRoutes from "./room.routes.js";
 import notificationRoutes from "./notifications.routes.js";
 import volunteerRoutes from "./volunteer.routes.js";
+import verificationRoutes from "./verification.routes.js";
 
 const router = express.Router();
 
@@ -27,4 +28,5 @@ router.use("/certificates", certificateRoutes);
 router.use("/rooms", roomRoutes);
 router.use("/notifications", notificationRoutes);
 router.use("/volunteers", volunteerRoutes);
+router.use("/verification", verificationRoutes);
 export default router;
